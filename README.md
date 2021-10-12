@@ -1,2 +1,1 @@
-# repository1
-repository1
+Коньков Дмитрий Б05-127
