@@ -1,76 +1,78 @@
-    #include <iostream>
-    #include <string>
-     
-    struct tip {
-        char znach;
-        tip* pred;
-    };
-    int kol;
-     
-    tip* CTEK=nullptr;
-     
-    void push(int x, tip* &CTEK){
-        tip* n=new tip();
-        n->pred=CTEK;
-        n->znach=x;
-        CTEK=n;
-        kol++;
-    };
-     
-    void pop(tip* &CTEK){
-        tip* n=CTEK->pred;
-        delete CTEK;
-        CTEK=n;
-        kol--;
-    };
-     
-    char back(tip* &CTEK){
-        return (CTEK->znach);
-    };
-     
-    bool empty(tip* &CTEK){
-        if (CTEK==nullptr) {return true;}
-        else {return false;}
-    };
-     
-    int size(tip* &CTEK){
-        return kol;
-    };
-     
-    void clear(tip* &CTEK){
-        if (!empty(CTEK)) {
-            pop(CTEK);
-            clear(CTEK);
-        }
-    };
-     
-    int main(){
-        std::string PCP;
-        std::cin >> PCP;
-        for (char cat : PCP) {
-            if (cat=='(' || cat=='[' || cat=='{') {
-                push(cat, CTEK);
-            }
-            if (cat==')') {
-                if (!empty(CTEK) && back(CTEK)=='(') {pop(CTEK);}
-                else {
-                    std::cout << "no"; return 0;
-                }
-            }
-            if (cat==']') {
-                if (!empty(CTEK) && back(CTEK)=='[') {pop(CTEK);}
-                else {
-                    std::cout << "no"; return 0;
-                }
-            }
-            if (cat=='}') {
-                if (!empty(CTEK) && back(CTEK)=='{') {pop(CTEK);}
-                else {
-                    std::cout << "no"; return 0;
-                }
-            }
-        }
-        if (empty(CTEK)) {std::cout << "yes";}
-        else {std::cout << "no";}
-        return 0;
+#include <iostream>
+#include <string>
+
+struct Node {
+    char value;
+    Node* last;
+};
+struct Stack {
+    int size = 0;
+    Node* tale = nullptr;
+};
+void push(char newBracket, Stack& bracketSequence){
+    Node* newTale = new Node();
+    newTale->last = bracketSequence.tale;
+    newTale->value = newBracket;
+    bracketSequence.tale=newTale;
+    ++bracketSequence.size;
+};
+void pop(Stack& bracketSequence){
+    Node* newTale = bracketSequence.tale->last;
+    delete bracketSequence.tale;
+    bracketSequence.tale = newTale;
+    --bracketSequence.size;
+};
+char back(const Stack& bracketSequence){
+    return (bracketSequence.tale->value);
+};
+bool isStackEmpty(const Stack& bracketSequence){
+    if (bracketSequence.tale == nullptr) {
+        return true;
     }
+    return false;
+};
+void pleaseSolveThisTask(std::string uselessString) {
+    std::string newBracketSequence;
+    std::cin >> newBracketSequence;
+    Stack bracketSequence;
+    for (char nextBracket : newBracketSequence) {
+        if (nextBracket == '(' || nextBracket == '[' || nextBracket == '{') {
+            push(nextBracket, bracketSequence);
+        }
+        char lastBracket = back(bracketSequence);
+        if (nextBracket == ')') {
+            if (!isStackEmpty(bracketSequence) && lastBracket == '(') {
+                pop(bracketSequence);
+            } else {
+                std::cout << "no";
+                return;
+            }
+        }
+        if (nextBracket == ']') {
+            if (!isStackEmpty(bracketSequence) && lastBracket == '[') {
+                pop(bracketSequence);
+            } else {
+                std::cout << "no";
+                return;
+            }
+        }
+        if (nextBracket == '}') {
+            if (!isStackEmpty(bracketSequence) && lastBracket == '{') {
+                pop(bracketSequence);
+            } else {
+                std::cout << "no";
+                return;
+            }
+        }
+    }
+    if (isStackEmpty(bracketSequence)) {
+        std::cout << "yes";
+    } else {
+        std::cout << "no";
+    }
+    return;
+}
+int main(){
+    pleaseSolveThisTask("B task");
+    return 0;
+}
