@@ -1,86 +1,89 @@
-    #include <iostream>
-    #include <string>
-     
-    struct type {
-      int val;
-      type* last;
-    };
-     
-    namespace stack {
-      type* myStack = nullptr;
-      int size;
-    };
-     
-    void push(int x, type* myStack){
-      type* n = new type();
-      n->last = myStack;
-      n->val = x;
-      stack::myStack = n;
-      stack::size++;
-    };
-     
-    void pop(type* myStack){
-      type* n = stack::myStack->last;
-      delete stack::myStack;
-      stack::myStack = n;
-      stack::size--;
-    };
-     
-    void back(type* myStack){
-      if (stack::myStack == nullptr) {
+#include <iostream>
+#include <string>
+
+struct Node {
+    int value;
+    Node* last;
+};
+struct Stack {
+    Node* tale = nullptr;
+    int size;
+};
+
+void push(int newValue, Stack& myStack){
+    Node* newTale = new Node();
+    newTale->last = myStack.tale;
+    newTale->value = newValue;
+    myStack.tale = newTale;
+    ++myStack.size;
+};
+
+void pop(Stack& myStack){
+    Node* newTale = myStack.tale->last;
+    delete myStack.tale;
+    myStack.tale = newTale;
+    --myStack.size;
+};
+
+void back(Stack& myStack){
+    if (myStack.tale == nullptr) {
         std::cout << "error" << std::endl;
-      } else {
-        std::cout << (stack::myStack->val) << std::endl;
-      }
-    };
-     
-    bool empty(type* myStack){
-      if (stack::myStack == nullptr) {
-        return true;
-      }
-      return false;
-    };
-     
-    void size(type* myStack){
-      std::cout << stack::size << std::endl;
-    };
-     
-    void clear(type* myStack){
-      if (!empty(stack::myStack)) {
-        pop(stack::myStack);
-        clear(stack::myStack);
-      }
-    };
-     
-    int main(){
-      while (true) {
-        std::string com;
-        std::cin >> com;
-        if (com == "exit") {
-          std::cout << "bye";
-          return 0;
-        }
-        if (com == "clear") {
-          clear(stack::myStack);
-          std::cout << "ok" << std::endl;
-        }
-        if (com == "size") {
-          size(stack::myStack);
-        }
-        if (com == "back") {
-          back(stack::myStack);
-        }
-        if (com == "pop") {
-          back(stack::myStack);
-          if (!empty(stack::myStack)) {
-            pop(stack::myStack);
-          }
-        }
-        if (com == "push") {
-          std::cout << "ok" << std::endl;
-          int newVal;
-          std::cin >> newVal;
-          push(newVal, stack::myStack);
-        }
-      }
+    } else {
+        std::cout << (myStack.tale->value) << std::endl;
     }
+};
+
+bool isStackEmpty(Stack& myStack){
+    if (myStack.tale == nullptr) {
+        return true;
+    }
+    return false;
+};
+
+void size(Stack& myStack){
+    std::cout << myStack.size << std::endl;
+};
+
+void clear(Stack& myStack){
+    while (!isStackEmpty(myStack)){
+        pop(myStack);
+    }
+};
+void pleaseSolveThisTask(std::string uselessString){
+    Stack myStack;
+    myStack.size = 0;
+    while (true) {
+        std::string command;
+        std::cin >> command;
+        if (command == "exit") {
+            std::cout << "bye";
+            return;
+        }
+        if (command == "clear") {
+            clear(myStack);
+            std::cout << "ok" << std::endl;
+        }
+        if (command == "size") {
+            size(myStack);
+        }
+        if (command == "back") {
+            back(myStack);
+        }
+        if (command == "pop") {
+            back(myStack);
+            if (!isStackEmpty(myStack)) {
+                pop(myStack);
+            }
+        }
+        if (command == "push") {
+            std::cout << "ok" << std::endl;
+            int newValue;
+            std::cin >> newValue;
+            push(newValue, myStack);
+        }
+    }
+}
+int main(){
+    pleaseSolveThisTask("A task");
+    return 0;
+}
