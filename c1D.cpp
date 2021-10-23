@@ -1,44 +1,70 @@
-    #include <iostream>
-    #include <stack>
-    #include <queue>
-     
-     
-    int main(){
-        std::stack <int> s;
-        std::queue <int> q1,q2;
-        std::vector <int> otvet;
-        int n,k1,k2,k;
-        k1=0; k2=0; k=0;
-        std::cin >> n;
-        for (int i=0;i<n;++i) {
-            char op;
-            int x;
-            std::cin >> op;
-            if (op=='*') {
-                std::cin >> x;
-                if ((k1+k2+k)%2==1) {s.push(x);k++;}
-                else {q1.push(x);k1++;}
-            }
-            if (op=='+') {
-                std::cin >> x;
-                q2.push(x);
-                if ((k1+k2+k)%2==0) {
-                    if (k!=0) {q1.push(s.top());s.pop();k--;k1++;}
-                    else {q1.push(q2.front());q2.pop();k2--;k1++;}
-                }
-                k2++;
-            }
-            if (op=='-') {
-                otvet.push_back(q1.front());
-                q1.pop();
-                k1--;
-                if ((k1+k2+k)%2==1) {
-                    if (k!=0) {q1.push(s.top());s.pop();k--;k1++;}
-                    else {q1.push(q2.front());q2.pop();k2--;k1++;}
-                }
+#include <iostream>
+#include <stack>
+#include <queue>
+#include <string>
+
+void pleaseSolveThisTask(std::string uselessString) {
+    std::stack<int> vip;
+    std::queue<int> beginPart;
+    std::queue<int> endPart;
+    int commandAmount;
+    int beginPartSize = 0;
+    int endPartSize = 0;
+    int vipSize = 0;
+    std::cin >> commandAmount;
+    for (int i = 0; i < commandAmount; ++i) {
+        char command;
+        int number;
+        std::cin >> command;
+        int sum = beginPartSize + endPartSize + vipSize;
+        if (command == '*') {
+            std::cin >> number;
+            if (sum % 2) {
+                vip.push(number);
+                ++vipSize;
+            } else {
+                beginPart.push(number);
+                ++beginPartSize;
             }
         }
-        for (int i=0;i<otvet.size();++i) {
-            std::cout << otvet[i] << std::endl;
+        if (command == '+') {
+            std::cin >> number;
+            endPart.push(number);
+            if (!(sum % 2)) {
+                if (vipSize) {
+                    beginPart.push(vip.top());
+                    vip.pop();
+                    --vipSize;
+                }
+                else {
+                    beginPart.push(endPart.front());
+                    endPart.pop();
+                    --endPartSize;
+                }
+                ++beginPartSize;
+            }
+            ++endPartSize;
+        }
+        if (command == '-') {
+            std::cout << beginPart.front() << std::endl;
+            beginPart.pop();
+            --beginPartSize;
+            --sum;
+            if (sum % 2) {
+                if (vipSize) {
+                    beginPart.push(vip.top());
+                    vip.pop();
+                    --vipSize;
+                } else {
+                    beginPart.push(endPart.front());
+                    endPart.pop();
+                    --endPartSize;
+                }
+                ++beginPartSize;
+            }
         }
     }
+}
+int main(){
+    pleaseSolveThisTask("D task");
+}
