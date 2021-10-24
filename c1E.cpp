@@ -1,38 +1,57 @@
-    #include <iostream>
-    #include <vector>
-     
-     
-     
-    int main(){
-        int n,mm,x,y,q,ll,t;
-        std::vector <int> a[900];
-        std::vector <int> b[900];
-        std::ios_base::sync_with_stdio(false);
-        std::cin.tie(NULL);
-        std::cin >> n >> mm >> ll;
-        for (int i=0;i<n;++i) {
-            for (int j=0;j<ll;++j) {
-                std::cin >> t; a[i].push_back(t);
-            }
+#include <iostream>
+#include <vector>
+
+const int MaxSize = 900;
+void pleaseSolveThisTask() {
+    std::vector <int> firstArray[MaxSize];
+    std::vector <int> secondArray[MaxSize];
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(NULL);
+    int firstArraySize;
+    int secondArraySize;
+    int stringSize;
+    std::cin >> firstArraySize >> secondArraySize >> stringSize;
+    for (int i = 0; i < firstArraySize; ++i) {
+        for (int j = 0; j < stringSize; ++j) {
+            int newElement;
+            std::cin >> newElement;
+            firstArray[i].push_back(newElement);
         }
-        for (int i=0;i<mm;++i) {
-            for (int j=0;j<ll;++j) {
-                std::cin >> t; b[i].push_back(t);
-            }
-        }
-        std::cin >> q;
-        for (int g=0;g<q;++g) {
-            std::cin >> x >> y;
-            x--; y--;
-            int l=0; int r=ll-1; int m;
-            while (r-l>1) {
-                m=(r+l)/2;
-                if (a[x][m]>b[y][m]) {r=m;}
-                else {l=m;}
-            }
-            if (std::max(a[x][l],b[y][l])<std::max(a[x][r],b[y][r])) {m=l;}
-            else {m=r;}
-            std::cout << m+1 << '\n';
-        }
-        return 0;
     }
+    for (int i = 0; i < secondArraySize; ++i) {
+        for (int j = 0; j < stringSize; ++j) {
+            int newElement;
+            std::cin >> newElement;
+            secondArray[i].push_back(newElement);
+        }
+    }
+    int commandAmount;
+    std::cin >> commandAmount;
+    for (int u = 0; u < commandAmount; ++u) {
+        int i;
+        int j;
+        std::cin >> i >> j; // i, j from task description
+        --i;
+        --j;
+        int left = 0;
+        int right = stringSize - 1;
+        int middle;
+        while (right - left > 1) {
+            middle = (right + left) / 2;
+            if (firstArray[i][middle] > secondArray[j][middle]) {
+                right = middle;
+            } else {
+                left = middle;
+            }
+        }
+        if (std::max(firstArray[i][left], secondArray[j][left]) < std::max(firstArray[i][right], secondArray[j][right])) {
+            middle = left;
+        } else {
+            middle = right;
+        }
+        std::cout << middle + 1 << '\n';
+    }
+}
+int main(){
+    pleaseSolveThisTask();
+}
