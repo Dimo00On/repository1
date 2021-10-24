@@ -1,100 +1,95 @@
-    #include <iostream>
-    #include <vector>
-    #include <string>
-     
-    struct Keyheap{
-        long long val;
-        int ind;
-    };
-    namespace Heap{
-      Keyheap myHeap[100001];
-      int n = 0;
-      std::vector<int> ind;
-    }
-    void siftUp(int v) {
-      using namespace Heap;
-      while (v!=1) {
-        if (myHeap[v].val<myHeap[v/2].val) {
-          ind[myHeap[v].ind]=v/2;
-          ind[myHeap[v/2].ind]=v;
-          std::swap(myHeap[v], myHeap[v/2]);
-          v /= 2;
+#include <iostream>
+#include <vector>
+#include <string>
+
+const int MaxHeapSize = 500000;
+struct Binary{
+    long long value[MaxHeapSize + 1];
+    int operation[MaxHeapSize + 1];
+    int size = 0;
+    std::vector<int> position;
+    void siftUp(int index);
+    void insert(int value, int operation);
+    void siftDown(int index);
+    void extractMin();
+    void decreaseKey(int hisOperation, int delta);
+};
+void Binary::siftUp(int index) {
+    while (index != 1) {
+        if (value[index] < value[index / 2]) {
+            std::swap(position[operation[index]], position[operation[index / 2]]);
+            std::swap(value[index], value[index / 2]);
+            std::swap(operation[index], operation[index / 2]);
+            index /= 2;
         } else {
-          break;
+            break;
         }
-      }
     }
-    void siftDown(int v) {
-      using namespace Heap;
-      while (2*v <= n) {
-        int newv = 2*v;
-        if (2*v+1 <= n && myHeap[2*v+1].val < myHeap[2*v].val) {
-          newv = 2*v+1;
+}
+void Binary::siftDown(int index) {
+    while (2 * index <= size) {
+        int newIndex = 2 * index;
+        if (newIndex + 1 <= size && value[newIndex + 1] < value[newIndex]) {
+            ++newIndex;
         }
-        if (myHeap[newv].val < myHeap[v].val) {
-          ind[myHeap[v].ind] = newv;
-          ind[myHeap[newv].ind] = v;
-          std::swap(myHeap[newv], myHeap[v]);
-          v = newv;
+        if (value[newIndex] < value[index]) {
+            std::swap(position[operation[index]], position[operation[newIndex]]);
+            std::swap(value[index], value[newIndex]);
+            std::swap(operation[index], operation[newIndex]);
+            index = newIndex;
         } else {
-          break;
+            break;
         }
-      }
     }
-    long long getMin(){
-      return Heap::myHeap[1].val;
-    }
-    void decreaseKey(int iX, int delta) {
-      using namespace Heap;
-      myHeap[ind[iX]].val -= delta;
-      siftUp(ind[iX]);
-    }
-    void insert(int x, int iX) {
-      using namespace Heap;
-      myHeap[++n].val=x;
-      myHeap[n].ind=iX;
-      ind[iX]=n;
-      siftUp(n);
-    }
-    void extractMin(){
-      using namespace Heap;
-      myHeap[1]=myHeap[n--];
-      ind[myHeap[1].ind]=1;
-      siftDown(1);
-    }
-    int main(){
-      using namespace Heap;
-      std::ios_base::sync_with_stdio(false);
-      std::cin.tie(NULL);
-      int q;
-      std::cin >> q;
-      ind.push_back(0);
-      //myHeap[0].val=-1;
-      for (int i = 1; i <= q; ++i) {
-        std::string com;
-        std::cin >> com;
-        ind.push_back(0);
-        if (com == "insert") {
-          int val;
-          std::cin >> val;
-          insert(val, i);
+}
+void Binary::decreaseKey(int hisOperation, int delta) {
+    value[position[hisOperation]] -= delta;
+    siftUp(position[hisOperation]);
+}
+void Binary::insert(int newValue, int newOperation) {
+    ++size;
+    value[size] = newValue;
+    operation[size] = newOperation;
+    position[newOperation] = size;
+    siftUp(size);
+}
+void Binary::extractMin(){
+    value[1] = value[size];
+    operation[1] = operation[size];
+    --size;
+    position[operation[1]] = 1;
+    siftDown(1);
+}
+void workingWithHeap(){
+    Binary heap;
+    int commandAmount;
+    std::cin >> commandAmount;
+    heap.position.push_back(0);
+    for (int i = 1; i <= commandAmount; ++i) {
+        std::string command;
+        std::cin >> command;
+        heap.position.push_back(0);
+        if (command == "insert") {
+            int value;
+            std::cin >> value;
+            heap.insert(value, i);
         }
-        if (com == "getMin") {
-          std::cout << getMin() << '\n';
+        if (command == "getMin") {
+            std::cout << heap.value[1] << '\n';
         }
-        if (com == "extractMin") {
-          extractMin();
+        if (command == "extractMin") {
+            heap.extractMin();
         }
-        if (com == "decreaseKey") {
-          int iX;
-          int delta;
-          std::cin >> iX >> delta;
-          decreaseKey(iX, delta);
+        if (command == "decreaseKey") {
+            int operation;
+            int delta;
+            std::cin >> operation >> delta;
+            heap.decreaseKey(operation, delta);
         }
-        /*for (int j=1; j<=n; ++j) {
-          std::cout << myHeap[j].val << "," << myHeap[j].ind << ";" << ind[myHeap[j].ind] << " ";
-        }
-        std::cout << '\n';*/
-     
-      }
     }
+}
+int main(){
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(NULL);
+    workingWithHeap();
+}
