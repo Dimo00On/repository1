@@ -4,28 +4,27 @@
 
 const int RandFunctionRange = 32768;
 void partition(int left, int right, int pivot, int& less, int& equal, std::vector<int>& array){
-    std::vector <int> b;
+    std::vector<int> temp;
     for (int i = left; i < right; ++i) {
         if (array[i] < pivot) {
-            b.push_back(array[i]);
+            temp.push_back(array[i]);
             ++less;
         }
     }
     for (int i = left; i < right; ++i) {
         if (array[i] == pivot) {
-            b.push_back(array[i]);
+            temp.push_back(array[i]);
             ++equal;
         }
     }
     for (int i = left; i < right; ++i) {
         if (array[i] > pivot) {
-            b.push_back(array[i]);
+            temp.push_back(array[i]);
         }
     }
     for (int i = left, j = 0; i < right; ++i, ++j) {
-        array[i] = b[j];
+        array[i] = temp[j];
     }
-    b.clear();
 }
 int QuickSelect(int left, int right, int sortedIndex, std::vector<int>& array) {
     if (right == left + 1) {
