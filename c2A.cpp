@@ -4,7 +4,6 @@
 #include <string>
 #include <algorithm>
 
-
 bool isFirstStringMoreSecondString(std::string firstString, std::string secondString) {
     std::string temp = firstString;
     firstString += secondString;
@@ -18,7 +17,7 @@ bool isFirstStringMoreSecondString(std::string firstString, std::string secondSt
     }
     return firstString[i] > secondString[i];
 }
-int main(){
+void pleaseSolveThisTask(const std::string& uselessString) {
     std::ifstream in("number.in");
     std::vector<std::string> numbers;
     std::string nextNumber;
@@ -32,4 +31,7 @@ int main(){
     for (int i = 0; i < numberAmount; ++i) {
         out << numbers[i];
     }
+}
+int main(){
+    pleaseSolveThisTask("A task");
 }
