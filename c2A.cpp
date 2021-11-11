@@ -1,37 +1,35 @@
-    #include <iostream>
-    #include <fstream>
-    #include <vector>
-    #include <string>
-    #include <algorithm>
-     
-    namespace Big{
-        int amount = 0;
-    }
-    bool compare(std::string firstString, std::string secondString) {
-        std::string stringOne = firstString;
-        firstString += secondString;
-        secondString += stringOne;
-        size_t i = 0;
-        while (firstString[i] == secondString[i]) {
-            ++i;
-            if (i == firstString.size()) {
-                return 0;
-            }
-        }
-        return firstString[i] > secondString[i];
-    }
-    int main(){
-        using namespace Big;
-        std::ifstream fin("number.in");
-        std::vector<std::string> numbers;
-        std::string nextNumber;
-        while (fin >> nextNumber) {
-            numbers.push_back(nextNumber);
-            ++amount;
-        }
-        std::sort(numbers.begin(), numbers.end(), compare);
-        std::ofstream fout("number.out");
-        for (int i = 0; i < amount; ++i) {
-            fout << numbers[i];
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <algorithm>
+
+
+bool isFirstStringMoreSecondString(std::string firstString, std::string secondString) {
+    std::string temp = firstString;
+    firstString += secondString;
+    secondString += temp;
+    size_t i = 0;
+    while (firstString[i] == secondString[i]) {
+        ++i;
+        if (i == firstString.size()) {
+            return false;
         }
     }
+    return firstString[i] > secondString[i];
+}
+int main(){
+    std::ifstream in("number.in");
+    std::vector<std::string> numbers;
+    std::string nextNumber;
+    int numberAmount = 0;
+    while (in >> nextNumber) {
+        numbers.push_back(nextNumber);
+        ++numberAmount;
+    }
+    std::sort(numbers.begin(), numbers.end(), isFirstStringMoreSecondString);
+    std::ofstream out("number.out");
+    for (int i = 0; i < numberAmount; ++i) {
+        out << numbers[i];
+    }
+}
