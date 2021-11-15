@@ -5,6 +5,11 @@ const int Infinity = static_cast<int>((static_cast<long long>(1) << 31) - 1) ;
 struct mins{
     int min1 = Infinity;
     int min2 = Infinity;
+    mins() = default;
+    mins(int first, int second) {
+        min1 = first;
+        min2 = second;
+    }
 };
 void degreesing(std::vector<int>& degrees) {
     degrees[1] = 0;
@@ -58,24 +63,8 @@ int answer(const int left, const int right, std::vector<std::vector<mins>>& spar
     int shift = 1 << level;
     return newMining(sparseChair[level][left - 1], sparseChair[level][right - shift], values).min2;
 }
-void pleaseSolveThisTask(const std::string& uselessString){
-    std::ios_base::sync_with_stdio(false);
-    std::cin.tie(NULL);
-    int numberAmount, commandAmount;
-    std::cin >> numberAmount >> commandAmount;
-    std::vector<int> degrees(numberAmount + 1);
-    degreesing(degrees);
-    std::vector<std::vector<mins>> sparseChair(degrees[numberAmount] + 1);
-    std::vector<int> values(numberAmount);
-    mins newMin;
-    for (int i = 0; i < numberAmount; ++i) {
-        int value;
-        std::cin >> value;
-        values[i] = value;
-        newMin.min1 = i;
-        newMin.min2 = i;
-        sparseChair[0].push_back(newMin);
-    }
+void buildChair(int numberAmount, std::vector<int>& degrees, std::vector<std::vector<mins>>& sparseChair,
+                std::vector<int>& values){
     int levelSize0 = numberAmount;
     int levelSize;
     int shift = 1;
@@ -86,25 +75,38 @@ void pleaseSolveThisTask(const std::string& uselessString){
             if (i == 1) {
                 int index1 = sparseChair[i - 1][j].min1;
                 int index2 = sparseChair[i - 1][j + 1].min1;
-                if (values[index1] < values[index2]) {
-                    newMin.min1 = index1;
-                    newMin.min2 = index2;
-                } else {
-                    newMin.min1 = index2;
-                    newMin.min2 = index1;
+                if (values[index1] > values[index2]) {
+                    std::swap(index1, index2);
                 }
-            } else {
-                newMin = newMining(sparseChair[i - 1][j], sparseChair[i - 1][j + shift/2], values);
+                mins newMin(index1, index2);
+                sparseChair[i].push_back(newMin);
+                continue;
             }
+            mins newMin = newMining(sparseChair[i - 1][j], sparseChair[i - 1][j + shift/2], values);
             sparseChair[i].push_back(newMin);
         }
     }
+}
+int main() {
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(NULL);
+    int numberAmount, commandAmount;
+    std::cin >> numberAmount >> commandAmount;
+    std::vector<int> degrees(numberAmount + 1);
+    degreesing(degrees);
+    std::vector<std::vector<mins>> sparseChair(degrees[numberAmount] + 1);
+    std::vector<int> values(numberAmount);
+    for (int i = 0; i < numberAmount; ++i) {
+        int value;
+        std::cin >> value;
+        values[i] = value;
+        mins newMin(i, i);
+        sparseChair[0].push_back(newMin);
+    }
+    buildChair(numberAmount, degrees, sparseChair, values);
     for (int i = 0; i < commandAmount; ++i) {
         int left, right;
         std::cin >> left >> right;
         std::cout << values[answer(left, right, sparseChair, degrees, values)] << '\n';
     }
-}
-int main() {
-    pleaseSolveThisTask("H task");
 }
