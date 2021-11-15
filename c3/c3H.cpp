@@ -3,8 +3,8 @@
 
 const int Infinity = static_cast<int>((static_cast<long long>(1) << 31) - 1) ;
 struct mins{
-    int min1 = Infinity;
-    int min2 = Infinity;
+    int min1 = Infinity;//короче чем first на целый символ
+    int min2 = Infinity;//короче чем second на целых 2 символа
     mins() = default;
     mins(int first, int second) {
         min1 = first;
