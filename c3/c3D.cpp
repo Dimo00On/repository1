@@ -2,15 +2,18 @@
 #include <vector>
 #include <algorithm>
 
+struct Segment;
 struct Edge{
     int value;
     bool type;
     int number;
+    std::vector<Segment>* info;
     Edge() = default;
-    Edge(int newValue, bool newType, int newNumber) {
+    Edge(int newValue, bool newType, int newNumber, std::vector<Segment>* newInfo) {
         value = newValue;
         type = newType;
         number = newNumber;
+        info = newInfo;
     }
 };
 struct Segment{
@@ -28,9 +31,6 @@ struct SegmentTree{
     int positionLeft = 0;
     int positionRight = 0;
 };
-namespace N{
-    std::vector<Segment> info;
-}
 void foundSum(int index, int leftSide, int rightSide, long long& sum, std::vector<SegmentTree>& tree){
     if (tree[index].positionLeft == leftSide && tree[index].positionRight == rightSide) {
         sum += tree[index].status;
@@ -63,9 +63,9 @@ bool comparator(Edge edge1, Edge edge2){
     if (edge1.value == edge2.value) {
         if (edge1.type == edge2.type) {
             if (!edge1.type) {
-                return N::info[edge1.number].left > N::info[edge2.number].left;
+                return (*edge1.info)[edge1.number].left > (*edge1.info)[edge2.number].left;
             }
-            return N::info[edge1.number].right > N::info[edge2.number].right;
+            return (*edge1.info)[edge1.number].right > (*edge1.info)[edge2.number].right;
         }
         return edge1.type > edge2.type;
     }
@@ -80,22 +80,24 @@ int findPerfectSize(int segmentAmount) {
     }
     return perfectSize;
 }
-void fillArrays(int left, int right, int segmentAmount, int step, std::vector<Edge>&  border) {
+void fillArrays(int left, int right, int segmentAmount, int step, std::vector<Edge>&  border,
+                std::vector<Segment>& info) {
     {
-        Edge newEdge(left, true, step);
+        Edge newEdge(left, true, step, &info);
         border[step] = newEdge;
     }
-    Edge newEdge(right, false, step);
+    Edge newEdge(right, false, step, &info);
     border[step + segmentAmount] = newEdge;
     Segment newSegment(left, right);
-    N::info.push_back(newSegment);
+    info.push_back(newSegment);
 }
-void fillTree(std::vector<SegmentTree>& tree, std::vector<Edge>& border, int segmentAmount, int perfectSize) {
+void fillTree(std::vector<SegmentTree>& tree, std::vector<Edge>& border, int segmentAmount, int perfectSize,
+              std::vector<Segment>& info) {
     int index = 0;
     for (int i = 0; i < 2 * segmentAmount; ++i) {
         if (border[i].type) {
             tree[index + perfectSize].positionLeft = tree[index + perfectSize].positionRight = index;
-            N::info[border[i].number].index = index + perfectSize;
+            info[border[i].number].index = index + perfectSize;
             ++index;
         }
     }
@@ -103,29 +105,29 @@ void fillTree(std::vector<SegmentTree>& tree, std::vector<Edge>& border, int seg
         tree[i + perfectSize].positionLeft = tree[i + perfectSize].positionRight = i;
     }
 }
-void allLogic(int segmentAmount, long long& sum, std::vector<Edge>& border, std::vector<SegmentTree>& tree){
+void allLogic(int segmentAmount, long long& sum, std::vector<Edge>& border, std::vector<SegmentTree>& tree, std::vector<Segment>& info){
     long long temp = 0;
     long long multiplier = 1;
     for (int i = 0; i < 2 * segmentAmount; ++i) {
         if (border[i].type) {
-            tree[N::info[border[i].number].index].status = 1;
-            update(N::info[border[i].number].index / 2, tree);
+            tree[info[border[i].number].index].status = 1;
+            update(info[border[i].number].index / 2, tree);
         } else {
-            tree[N::info[border[i].number].index].status = 0;
-            update(N::info[border[i].number].index / 2, tree);
+            tree[info[border[i].number].index].status = 0;
+            update(info[border[i].number].index / 2, tree);
             if (i != 2 * segmentAmount - 1 && border[i].value == border[i + 1].value && !border[i + 1].type
-                && N::info[border[i].number].left == N::info[border[i + 1].number].left) {
+                && info[border[i].number].left == info[border[i + 1].number].left) {
                 ++multiplier;
                 continue;
             }
             if (multiplier > 1) {
-                foundSum(1, 0, tree[N::info[border[i].number].index].positionRight, temp, tree);
+                foundSum(1, 0, tree[info[border[i].number].index].positionRight, temp, tree);
                 sum += multiplier * temp;
                 multiplier = 1;
                 temp = 0;
                 continue;
             }
-            foundSum(1, 0, tree[N::info[border[i].number].index].positionRight, sum, tree);
+            foundSum(1, 0, tree[info[border[i].number].index].positionRight, sum, tree);
         }
     }
 }
@@ -134,18 +136,19 @@ int main(){
     std::cin.tie(NULL);
     int segmentAmount;
     std::cin >> segmentAmount;
+    std::vector<Segment> info;
     int perfectSize = findPerfectSize(segmentAmount);
     std::vector<Edge> border(2 * segmentAmount);
     std::vector<SegmentTree> tree(2 * perfectSize);
     for (int i = 0; i < segmentAmount; ++i) {
         int left, right;
         std::cin >> left >> right;
-        fillArrays(left, right, segmentAmount, i, border);
+        fillArrays(left, right, segmentAmount, i, border, info);
     }
     std::sort(border.begin(), border.end(), comparator);
-    fillTree(tree, border, segmentAmount, perfectSize);
+    fillTree(tree, border, segmentAmount, perfectSize, info);
     build(1, tree, perfectSize);
     long long sum = 0;
-    allLogic(segmentAmount, sum, border, tree);
+    allLogic(segmentAmount, sum, border, tree, info);
     std::cout << sum;
 }
