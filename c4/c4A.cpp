@@ -1,7 +1,6 @@
 #include <iostream>
 
 const int Infinity = 1e9 + 42;
-//const int AlphabetStart = 48;
 struct Node{
     Node* left;
     Node* right;
@@ -38,7 +37,7 @@ Node* Node::leftFix() {
     Node* temp;
     int leftRightHigh = (left->right == nullptr ? -1 : left->right->high);
     int leftLeftHigh = (left->left == nullptr ? -1 : left->left->high);
-    left->delta = leftRightHigh - leftRightHigh;
+    left->delta = leftLeftHigh - leftRightHigh;
     left->high = std::max(leftRightHigh, leftLeftHigh) + 1;
     if (left->delta >= 0) {
         temp = left;
@@ -113,7 +112,7 @@ void Node::fix() {
     if (left != nullptr) {
         int leftRightHigh = (left->right == nullptr ? -1 : left->right->high);
         int leftLeftHigh = (left->left == nullptr ? -1 : left->left->high);
-        left->delta = leftRightHigh - leftRightHigh;
+        left->delta = leftLeftHigh - leftRightHigh;
         left->high = std::max(leftRightHigh, leftLeftHigh) + 1;
     }
     parent->fix();
@@ -163,6 +162,7 @@ void Node::remove(int newValue) {
                 replacement->right->parent = replacement->parent;
             }
             value = replacement->value;
+            replacement->parent->fix();
             delete replacement;
             return;
         }
@@ -233,34 +233,8 @@ void Node::prev(int newValue, int& answer) {
         right->prev(newValue, answer);
     }
 }
-/*int decipherThisTerribleInput(std::string& command) {
-    int value = 0;
-    int i =0;
-    while (command[i] != ' ') {
-        ++i;
-    }
-    ++i;
-    while (i < command.length()) {
-        value *= 10;
-        value += (command[i] - AlphabetStart);
-        ++i;
-    }
-    return value;
-}*/
 int main() {
-    //std::ios_base::sync_with_stdio(false);
-    //std::cin.tie(NULL);
     Node tree;
-    /*for (int i = 0; i < 10000; ++i) {
-        tree.insert(i);
-    }
-    int x=0;
-    for (int i = 0; i < 10000; ++i) {
-        if (!(i % 1000)) {
-            ++x;
-        }
-        tree.remove((i * 137) % 10000);
-    }*/
     std::string command;
     for (int i = 0; i < 100000; ++i) {
         if (std::cin >> command) {
