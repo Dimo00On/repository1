@@ -319,9 +319,7 @@ int main() {
     for (int i = 0; i < commandAmount; ++i) {
         std::string command;
         std::cin >> command;
-        if (command[0] == '+' || // или то, что написано мелким шрифтом непойми где в условииииииииииии
-                                        command[0] == '1' //!!!!!!!!!!!!!!!!!!!!!!!!!
-                                        ) {
+        if (command[0] == '+' || command[0] == '1') {
             long long value;
             std::cin >> value;
             tree = tree->insert(value, Nul);
