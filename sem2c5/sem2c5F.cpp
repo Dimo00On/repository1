@@ -1,14 +1,38 @@
 #include <iostream>
 #include <vector>
 
-bool augment(int vertex, int vertexAmount, std::vector<bool>& used, std::vector<int>& match,
-             std::vector<std::vector<int>>& edges) {
+class Solver {
+private:
+    int vertexAmount;
+    std::vector<bool> used;
+    std::vector<int> match;
+    std::vector<std::vector<int>> edges;
+    int answer = 0;
+
+public:
+    explicit Solver(int vertexAmount);
+    void add(int from, int to);
+    int findAnswer();
+    bool augment(int vertex);
+};
+
+Solver::Solver(int vertexAmount) : vertexAmount(vertexAmount),
+    used(vertexAmount, false), match(vertexAmount, -1), edges(vertexAmount) {}
+
+
+void Solver::add(int from, int to) {
+    --from;
+    --to;
+    edges[from].push_back(to);
+}
+
+bool Solver::augment(int vertex) {
     if (used[vertex]) {
         return false;
     }
     used[vertex] = true;
     for (int to : edges[vertex]) {
-        if (match[to] == -1 || augment(match[to], vertexAmount, used, match, edges)) {
+        if (match[to] == -1 || augment(match[to])) {
             match[to] = vertex;
             return true;
         }
@@ -16,12 +40,9 @@ bool augment(int vertex, int vertexAmount, std::vector<bool>& used, std::vector<
     return false;
 }
 
-int findAnswer(int vertexAmount, int edgesAmount,
-               std::vector<std::vector<int>>& edges) {
-    std::vector<bool> used(vertexAmount, false);
-    std::vector<int> match(vertexAmount, -1);
+int Solver::findAnswer() {
     for (int i = 0; i < vertexAmount; ++i) {
-        if (augment(i, vertexAmount, used, match, edges))  {
+        if (augment(i))  {
             for (int j = 0; j < vertexAmount; ++j) {
                 used[j] = false;
             }
@@ -34,7 +55,6 @@ int findAnswer(int vertexAmount, int edgesAmount,
             edges[i].push_back(match[i]);
         }
     }
-    int answer = 0;
     for (int i = 0; i < vertexAmount; ++i) {
         if (edges[i].empty()) {
             ++answer;
@@ -46,13 +66,11 @@ int findAnswer(int vertexAmount, int edgesAmount,
 int main() {
     int vertexAmount, edgesAmount;
     std::cin >> vertexAmount >> edgesAmount;
-    std::vector<std::vector<int>> edges(vertexAmount);
+    Solver solver(vertexAmount);
     for (int i = 0; i < edgesAmount; ++i) {
         int from, to;
         std::cin >> from >> to;
-        --from;
-        --to;
-        edges[from].push_back(to);
+        solver.add(from, to);
     }
-    std::cout << findAnswer(vertexAmount, edgesAmount, edges);
+    std::cout << solver.findAnswer();
 }
