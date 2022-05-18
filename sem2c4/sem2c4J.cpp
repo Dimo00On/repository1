@@ -9,7 +9,63 @@ const int kModule = 16;
 const char kInfinity = 120;
 const int kAccuracy = 150;
 
-char getEmptyPos(uint64_t pos, std::vector<uint64_t>& degree) {
+struct Binary{
+    std::vector<char> value;
+    std::vector<int> operation;
+    int size = 0;
+    std::vector<int> position;
+    void siftUp(int index);
+    void insert(char value, int operation);
+    void siftDown(int index);
+    void extractMin();
+    void decreaseKey(int hisOperation, char delta);
+    int getMinOperation();
+    bool contains(int hisOperation);
+    char getValue(int hisOperation);
+    char getMin();
+};
+
+class Solver { //а чё так можно было что-ли?
+private:
+    std::vector<uint64_t> degree;
+    uint64_t start = 0;
+    uint64_t end = 0;
+    std::vector<std::vector<char>> forCheck;
+    std::vector<std::pair<int, int>> forApprox[2]; // 0 == left, 1 == right
+    std::unordered_map<uint64_t, std::pair<uint64_t, char>> steps[2];
+    uint64_t foundVertex;
+    std::unordered_map<uint64_t, char> realDist[2];
+    std::unordered_set<uint64_t> used[2];
+    std::unordered_map<uint64_t, int> numbers;
+    std::vector<uint64_t> positions;
+    Binary heap[2];
+    int counter = 1;
+    int foundCount = 0;
+    char minVal = kInfinity;
+    bool timeToStop = false;
+
+public:
+    int stepAmount;
+    std::vector<char> answer;
+
+public:
+    Solver();
+    void read(int i, int j, uint64_t value);
+    bool checkIsOk();
+    bool isStartEqualsEnd() {
+        return start == end;
+    };
+    void createAnswer();
+    void prepare();
+    void findAnswer();
+    char getEmptyPos(uint64_t pos);
+    uint64_t changePos(uint64_t pos, char type, char emptyPos);
+    char approx(uint64_t pos, int side);
+    void addNewPos(uint64_t from, int side, char letter, char emptyPos, char changeType);
+    void newStep(int side);
+};
+
+char Solver::getEmptyPos(uint64_t pos) {
     for (char i = 0; i < kModule; ++i) {
         if ((pos >> degree[i]) % kModule == 0) {
             return i;
@@ -18,7 +74,7 @@ char getEmptyPos(uint64_t pos, std::vector<uint64_t>& degree) {
     return -1;
 }
 
-uint64_t changePos(uint64_t pos, std::vector<uint64_t>& degree, char type, char emptyPos) {
+uint64_t Solver::changePos(uint64_t pos, char type, char emptyPos) {
     char otherPos = emptyPos;
     if (type == 'U') {
         otherPos -= 4;
@@ -36,22 +92,6 @@ uint64_t changePos(uint64_t pos, std::vector<uint64_t>& degree, char type, char 
     pos -= otherVal * ((static_cast<uint64_t>(1) << degree[otherPos]) - (static_cast<uint64_t>(1) << degree[emptyPos]));
     return pos;
 }
-
-struct Binary{
-    std::vector<char> value;
-    std::vector<int> operation;
-    int size = 0;
-    std::vector<int> position;
-    void siftUp(int index);
-    void insert(char value, int operation);
-    void siftDown(int index);
-    void extractMin();
-    void decreaseKey(int hisOperation, char delta);
-    int getMinOperation();
-    bool contains(int hisOperation);
-    char getValue(int hisOperation);
-    char getMin();
-};
 
 char Binary::getMin() {
     return value[1];
@@ -126,16 +166,16 @@ void Binary::extractMin(){
     siftDown(1);
 }
 
-bool checkIsOk(std::vector<std::vector<char>>& start) {
+bool Solver::checkIsOk() {
     int counter = 0;
     std::vector<char> elements;
     for (int i = 0; i < kSize; ++i) {
         for (int j = 0; j < kSize; ++j) {
-            if (start[i][j] == 0) {
+            if (forCheck[i][j] == 0) {
                 counter += (i + 1);
             }
             else {
-                elements.push_back(start[i][j]);
+                elements.push_back(forCheck[i][j]);
             }
         }
     }
@@ -152,7 +192,7 @@ bool checkIsOk(std::vector<std::vector<char>>& start) {
     return true;
 }
 
-char approx(uint64_t pos, std::vector<std::pair<int, int>>& forApprox, std::vector<uint64_t>& degree) {
+char Solver::approx(uint64_t pos, int side) {
     std::vector<std::vector<char>> position(kSize);
     for (int i = 0; i < kModule; ++i) {
         position[i / 4].push_back(static_cast<char>((pos >> degree[i]) % kModule));
@@ -161,7 +201,7 @@ char approx(uint64_t pos, std::vector<std::pair<int, int>>& forApprox, std::vect
     for (int i = 0; i < kSize; ++i) {
         for (int j = 0; j < kSize; ++j) {
             if (position[i][j] != 0) {
-                answer += (std::abs(i - forApprox[position[i][j]].first) + std::abs(j - forApprox[position[i][j]].second));
+                answer += (std::abs(i - forApprox[side][position[i][j]].first) + std::abs(j - forApprox[side][position[i][j]].second));
             }
         }
     }
@@ -171,8 +211,8 @@ char approx(uint64_t pos, std::vector<std::pair<int, int>>& forApprox, std::vect
         for (int j = 0; j < kSize; ++j) {
             if (!badLine && position[i][j] != 0) {
                 for (int k = j + 1; k < kSize; ++k) {
-                    if (forApprox[position[i][j]].first == i && forApprox[position[i][k]].first == i
-                        && forApprox[position[i][j]].second > forApprox[position[i][k]].second
+                    if (forApprox[side][position[i][j]].first == i && forApprox[side][position[i][k]].first == i
+                        && forApprox[side][position[i][j]].second > forApprox[side][position[i][k]].second
                         && position[i][k] != 0) {
                         answer += 2;
                         badLine = true;
@@ -183,8 +223,8 @@ char approx(uint64_t pos, std::vector<std::pair<int, int>>& forApprox, std::vect
             if (!badColumn && position[j][i] != 0) {
                 for (int k = j + 1; k < kSize; ++k) {
                     if (position[k][i] != 0
-                        && forApprox[position[j][i]].second == i && forApprox[position[k][i]].second == i
-                        && forApprox[position[j][i]].first > forApprox[position[k][i]].first) {
+                        && forApprox[side][position[j][i]].second == i && forApprox[side][position[k][i]].second == i
+                        && forApprox[side][position[j][i]].first > forApprox[side][position[k][i]].first) {
                         answer += 2;
                         badColumn = true;
                         break;
@@ -196,213 +236,164 @@ char approx(uint64_t pos, std::vector<std::pair<int, int>>& forApprox, std::vect
     return 2 * answer; //-No, you can't just multiply heuristic! -Hehe, accuracy makes brrrrr
 }
 
-void addNewPos(uint64_t from, std::vector<std::pair<int, int>>& forApprox,
-               Binary& heap, std::unordered_map<uint64_t, char>& realDist,
-               char letter, char emptyPos, std::unordered_map<uint64_t, std::pair<uint64_t, char>>& steps,
-               std::vector<uint64_t>& degree, char changeType,
-               Binary& otherHeap, std::unordered_map<uint64_t, int>& numbers, int& counter,
-               std::vector<uint64_t>& positions) {
-    uint64_t to = changePos(from, degree, changeType, emptyPos);
-    char fromDist = realDist[from];
-    char approximation = approx(to, forApprox, degree);
-    if (realDist.count(to)) {
-        char toDist = realDist[to];
+void Solver::addNewPos(uint64_t from, int side, char letter, char emptyPos, char changeType) {
+    uint64_t to = changePos(from, changeType, emptyPos);
+    char fromDist = realDist[side][from];
+    char approximation = approx(to, side);
+    if (realDist[side].count(to)) {
+        char toDist = realDist[side][to];
         if ((toDist > fromDist + 1)) {
             int number = numbers[to];
-            realDist[to] = fromDist + 1;
-            char delta = heap.getValue(number) - fromDist - 1 - approximation;
+            realDist[side][to] = fromDist + 1;
+            char delta = heap[side].getValue(number) - fromDist - 1 - approximation;
             char approxDist = fromDist + 1 + approximation;
-            if (heap.contains(number)) {
-                heap.decreaseKey(number, delta);
+            if (heap[side].contains(number)) {
+                heap[side].decreaseKey(number, delta);
             } else {
-                heap.insert(approxDist, number);
+                heap[side].insert(approxDist, number);
             }
-            steps[to].first = from;
-            steps[to].second = letter;
+            steps[side][to].first = from;
+            steps[side][to].second = letter;
         }
     } else {
-        realDist.insert(std::make_pair(to, fromDist + 1));
+        realDist[side].insert(std::make_pair(to, fromDist + 1));
         if (numbers.count(to)) {
-            heap.insert(fromDist + 1 + approximation, numbers[to]);
+            heap[side].insert(fromDist + 1 + approximation, numbers[to]);
         } else {
             ++counter;
             positions.push_back(to);
             numbers.insert(std::make_pair(to, counter));
-            heap.insert(fromDist + 1 + approximation, counter);
+            heap[side].insert(fromDist + 1 + approximation, counter);
         }
-        steps.insert(std::make_pair(to, std::make_pair(from, letter)));
-        otherHeap.position.push_back(-1);
+        steps[side].insert(std::make_pair(to, std::make_pair(from, letter)));
+        heap[1 - side].position.push_back(-1);
     }
 }
 
-int findAnswer(uint64_t start, uint64_t end, std::unordered_map<uint64_t, std::pair<uint64_t, char>>& stepsLeft,
-               std::unordered_map<uint64_t, std::pair<uint64_t, char>>& stepsRight, uint64_t& foundVertex,
-               std::vector<uint64_t>& degree, std::vector<std::pair<int, int>>& forApproxLeft,
-               std::vector<std::pair<int, int>>& forApproxRight) {
-    std::unordered_map<uint64_t, char> realDistLeft;
-    std::unordered_map<uint64_t, char> realDistRight;
-    std::unordered_set<uint64_t> usedLeft;
-    std::unordered_set<uint64_t> usedRight;
-    std::unordered_map<uint64_t, int> numbers;
-    std::vector<uint64_t> positions;
+void Solver::prepare() {
     positions.push_back(end);
     positions.push_back(start);
     numbers.insert(std::make_pair(start, 1));
     numbers.insert(std::make_pair(end, 0));
-    realDistLeft.insert(std::make_pair(start, 0));
-    realDistRight.insert(std::make_pair(end, 0));
-    stepsLeft.insert(std::make_pair(start, std::make_pair(-1, 'o')));
-    stepsRight.insert(std::make_pair(end, std::make_pair(-1, 'o')));
-    Binary heapLeft;
-    Binary heapRight;
-    heapLeft.value.push_back(-1);
-    heapLeft.operation.push_back(-1);
-    heapRight.value.push_back(-1);
-    heapRight.operation.push_back(-1);
-    heapLeft.position.push_back(-1);
-    heapLeft.insert(approx(start, forApproxLeft, degree), 1);
-    heapRight.insert(approx(end, forApproxRight, degree), 0);
-    heapRight.position.push_back(-1);
-    uint64_t from;
-    int number;
-    int counter = 1;
-    char value;
-    int foundCount = 0;
-    char minVal = kInfinity;
-    while (true) {
-        number = heapLeft.getMinOperation();
-        value = heapLeft.getMin();
-        from = positions[number];
-        heapLeft.extractMin();
-        usedLeft.insert(from);
-        if (usedRight.count(from) || from == end) {
-            ++foundCount;
-            char realVal = realDistLeft[from] + realDistRight[from];
-            if (value == realVal || foundCount > kAccuracy || from == end) {
-                if (minVal > realVal) {
-                    foundVertex = from;
-                }
-                break;
-            }
-            if (minVal > realVal) {
-                foundVertex = from;
-                minVal = realVal;
-            }
-        }
-        {
-            char emptyPos = getEmptyPos(from, degree);
-            int line = emptyPos / 4;
-            int column = emptyPos % 4;
-            if (line < 3) {
-                addNewPos(from, forApproxLeft, heapLeft,  realDistLeft, 'U', emptyPos,
-                          stepsLeft, degree, 'D', heapRight, numbers, counter, positions);
-            }
-            if (line > 0) {
-                addNewPos(from, forApproxLeft, heapLeft, realDistLeft, 'D', emptyPos,
-                          stepsLeft, degree, 'U', heapRight, numbers, counter, positions);
-            }
-            if (column < 3) {
-                addNewPos(from, forApproxLeft, heapLeft, realDistLeft, 'L', emptyPos,
-                          stepsLeft, degree, 'R', heapRight, numbers, counter, positions);
-            }
-            if (column > 0) {
-                addNewPos(from, forApproxLeft, heapLeft, realDistLeft, 'R', emptyPos,
-                          stepsLeft, degree, 'L', heapRight, numbers, counter, positions);
-            }
-        }
-        number = heapRight.getMinOperation();
-        value = heapRight.getMin();
-        from = positions[number];
-        heapRight.extractMin();
-        usedRight.insert(from);
-        if (usedLeft.count(from) || from == start) {
-            ++foundCount;
-            char realVal = realDistLeft[from] + realDistRight[from];
-            if (value == realVal || foundCount > kAccuracy || from == start) {
-                if (minVal > realVal) {
-                    foundVertex = from;
-                }
-                break;
-            }
-            if (minVal > realVal) {
-                foundVertex = from;
-                minVal = realVal;
-            }
-        }
-        char emptyPos = getEmptyPos(from, degree);
-        int line = emptyPos / 4;
-        int column = emptyPos % 4;
-        if (line < 3) {
-            addNewPos(from, forApproxRight, heapRight, realDistRight, 'D', emptyPos,
-                      stepsRight, degree, 'D', heapLeft, numbers, counter, positions);
-        }
-        if (line > 0) {
-            addNewPos(from, forApproxRight, heapRight, realDistRight, 'U', emptyPos,
-                      stepsRight, degree, 'U', heapLeft, numbers, counter, positions);
-        }
-        if (column < 3) {
-            addNewPos(from, forApproxRight, heapRight, realDistRight, 'R', emptyPos,
-                      stepsRight, degree, 'R', heapLeft, numbers, counter, positions);
-        }
-        if (column > 0) {
-            addNewPos(from, forApproxRight, heapRight, realDistRight, 'L', emptyPos,
-                      stepsRight, degree, 'L', heapLeft, numbers, counter, positions);
-        }
-    }
-    return (realDistLeft[foundVertex] + realDistRight[foundVertex]);
+    realDist[0].insert(std::make_pair(start, 0));
+    realDist[1].insert(std::make_pair(end, 0));
+    steps[0].insert(std::make_pair(start, std::make_pair(-1, 'o')));
+    steps[1].insert(std::make_pair(end, std::make_pair(-1, 'o')));
+    heap[0].value.push_back(-1);
+    heap[0].operation.push_back(-1);
+    heap[1].value.push_back(-1);
+    heap[1].operation.push_back(-1);
+    heap[0].position.push_back(-1);
+    heap[0].insert(approx(start, 0), 1);
+    heap[1].insert(approx(end, 1), 0);
+    heap[1].position.push_back(-1);
 }
 
-int main() {
-    std::vector<uint64_t> degree(kModule);
+void Solver::findAnswer() {
+    prepare();
+    while (!timeToStop) {
+        newStep(0);
+        if (timeToStop) {
+            break;
+        }
+        newStep(1);
+    }
+    stepAmount = (realDist[0][foundVertex] + realDist[1][foundVertex]);
+}
+
+void Solver::newStep(int side) {
+    int number = heap[side].getMinOperation();
+    char value = heap[side].getMin();
+    uint64_t from = positions[number];
+    heap[side].extractMin();
+    used[side].insert(from);
+    if (used[1 - side].count(from) || from == (side ? start : end)) {
+        ++foundCount;
+        char realVal = realDist[side][from] + realDist[1 - side][from];
+        if (value == realVal || foundCount > kAccuracy || from == (side ? start : end)) {
+            if (minVal > realVal) {
+                foundVertex = from;
+            }
+            timeToStop = true;
+            return;
+        }
+        if (minVal > realVal) {
+            foundVertex = from;
+            minVal = realVal;
+        }
+    }
+    char emptyPos = getEmptyPos(from);
+    int line = emptyPos / 4;
+    int column = emptyPos % 4;
+    if (line < 3) {
+        addNewPos(from, side, (side ? 'D' : 'U'), emptyPos, 'D');
+    }
+    if (line > 0) {
+        addNewPos(from, side, (side ? 'U' : 'D'), emptyPos,'U');
+    }
+    if (column < 3) {
+        addNewPos(from, side, (side ? 'R' : 'L'), emptyPos,'R');
+    }
+    if (column > 0) {
+        addNewPos(from, side, (side ? 'L' : 'R'), emptyPos, 'L');
+    }
+}
+
+void Solver::createAnswer() {
+    std::pair<uint64_t, char> nextStep = steps[0][foundVertex];
+    while (nextStep.first != -1) {
+        answer.push_back(nextStep.second);
+        nextStep = steps[0][nextStep.first];
+    }
+    std::reverse(answer.begin(), answer.end());
+    nextStep = steps[1][foundVertex];
+    while (nextStep.first != -1) {
+        answer.push_back(nextStep.second);
+        nextStep = steps[1][nextStep.first];
+    }
+}
+
+void Solver::read(int i, int j, uint64_t value) {
+    forApprox[1][value] = std::make_pair(i, j);
+    forApprox[0][(4 * i + j + 1) % kModule] = std::make_pair(i, j);
+    forCheck[i][j] = static_cast<char>(value);
+    start *= kModule;
+    start += value;
+    end *= kModule;
+    end += ((4 * i + j + 1) % kModule);
+}
+
+Solver::Solver() : degree(kModule), forCheck(kSize, std::vector<char>(kSize)) {
+    forApprox[0].resize(kModule);
+    forApprox[1].resize(kModule);
     for (int i = kModule - 1; i >= 0; --i) {
         degree[i] = 4 * (kModule - i - 1);
     }
-    uint64_t start = 0;
-    uint64_t end = 0;
-    std::vector<std::vector<char>> forCheck(kSize, std::vector<char>(kSize));
-    std::vector<std::pair<int, int>> forApproxLeft(kModule);
-    std::vector<std::pair<int, int>> forApproxRight(kModule);
+}
+
+int main() {
+    Solver solver;
     for (int i = 0; i < kSize; ++i) {
         for (int j = 0; j < kSize; ++j) {
             uint64_t value;
             std::cin >> value;
-            forApproxRight[value] = std::make_pair(i, j);
-            forApproxLeft[(4 * i + j + 1) % kModule] = std::make_pair(i, j);
-            forCheck[i][j] = static_cast<char>(value);
-            start *= kModule;
-            start += value;
-            end *= kModule;
-            end += ((4 * i + j + 1) % kModule);
+            solver.read(i, j, value);
         }
     }
-    if (!checkIsOk(forCheck)) {
+    if (!solver.checkIsOk()) {
         std::cout << -1;
         return 0;
     }
-    if (start == end) {
+    if (solver.isStartEqualsEnd()) {
         std::cout << 0;
         return 0;
     }
-    std::unordered_map<uint64_t, std::pair<uint64_t, char>> stepsLeft;
-    std::unordered_map<uint64_t, std::pair<uint64_t, char>> stepsRight;
-    uint64_t foundVertex;
-    int stepAmount = findAnswer(start, end, stepsLeft, stepsRight, foundVertex, degree, forApproxLeft, forApproxRight);
-    std::cout << stepAmount << '\n';
-    if (stepAmount > 0) {
-        std::pair<uint64_t, char> nextStep = stepsLeft[foundVertex];
-        std::vector<char> answer;
-        while (nextStep.first != -1) {
-            answer.push_back(nextStep.second);
-            nextStep = stepsLeft[nextStep.first];
-        }
-        std::reverse(answer.begin(), answer.end());
-        nextStep = stepsRight[foundVertex];
-        while (nextStep.first != -1) {
-            answer.push_back(nextStep.second);
-            nextStep = stepsRight[nextStep.first];
-        }
-        for (int i = 0; i < stepAmount; ++i) {
-            std::cout << answer[i];
+    solver.findAnswer();
+    std::cout << solver.stepAmount << '\n';
+    if (solver.stepAmount > 0) {
+        solver.createAnswer();
+        for (int i = 0; i < solver.stepAmount; ++i) {
+            std::cout << solver.answer[i];
         }
     }
 }
