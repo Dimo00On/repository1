@@ -71,16 +71,16 @@ class IntegerFFT {
       root_in_power_[i] = (root_in_power_[i - 1] * root) % kMod;
     }
   }
-  int ReversedBits(int value) {
+  int ReversedBits(int value) const {
     int ans = 0;
     for (int i = 0; i < degree_power_; ++i) {
       ans += ((value >> i) % 2) << (degree_power_ - i - 1);
     }
     return ans;
   }
-  std::vector<long long> Transform(const std::vector<long long>& polynomial) {
+  void Precalculate(const std::vector<long long>& polynomial,
+                    std::vector<long long>& calculated) {
     int size = static_cast<int>(polynomial.size());
-    std::vector<long long> calculated(degree_, 0);
     for (int i = 0; i < degree_; ++i) {
       int index = ReversedBits(i);
       if (index < size) {
@@ -90,24 +90,32 @@ class IntegerFFT {
         }
       }
     }
-    size = 1;
+  }
+  void ButterflyTransform(std::vector<long long>& calculated, int cur_degree,
+                          int size) {
+    long long first = calculated[cur_degree];
+    long long second = calculated[cur_degree + size];
+    long long shift = degree_ / 2 / size;
+    calculated[cur_degree] = first;
+    calculated[cur_degree] +=
+        root_in_power_[(cur_degree * shift) % degree_] * second;
+    calculated[cur_degree] %= kMod;
+    calculated[cur_degree + size] = first;
+    calculated[cur_degree + size] +=
+        root_in_power_[((cur_degree + size) * shift) % degree_] * second;
+    calculated[cur_degree + size] %= kMod;
+  }
+  std::vector<long long> Transform(const std::vector<long long>& polynomial) {
+    std::vector<long long> calculated(degree_, 0);
+    Precalculate(polynomial, calculated);
+    int size = 1;
     for (int cur_degree_power = 0; cur_degree_power < degree_power_;
          ++cur_degree_power) {
       for (int cur_degree = 0; cur_degree < degree_; ++cur_degree) {
         if ((cur_degree / size) % 2 == 1) {
           continue;
         }
-        long long first = calculated[cur_degree];
-        long long second = calculated[cur_degree + size];
-        long long shift = degree_ / 2 / size;
-        calculated[cur_degree] = first;
-        calculated[cur_degree] +=
-            root_in_power_[(cur_degree * shift) % degree_] * second;
-        calculated[cur_degree] %= kMod;
-        calculated[cur_degree + size] = first;
-        calculated[cur_degree + size] +=
-            root_in_power_[((cur_degree + size) * shift) % degree_] * second;
-        calculated[cur_degree + size] %= kMod;
+        ButterflyTransform(calculated, cur_degree, size);
       }
       size *= 2;
     }
