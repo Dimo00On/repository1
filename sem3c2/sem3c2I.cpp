@@ -67,6 +67,7 @@ class IntegerFFT {
 
  private:
   const long long kMod = kBaseFFTMod;
+  const int kNotFound = -1;
   long long degree_ = 1;
   int degree_power_ = 0;
   std::vector<long long> reversed_degree_;
@@ -83,7 +84,7 @@ class IntegerFFT {
       long long root_degree = (kMod - 1) / degree;
       long long root = Pow(kBaseRoot, root_degree, kMod);
       root_in_power_[cur_degree_power].resize(degree + 1, 1);
-      rev_bits_[cur_degree_power].resize(degree, -1);
+      rev_bits_[cur_degree_power].resize(degree, kNotFound);
       for (int i = 1; i < degree; ++i) {
         root_in_power_[cur_degree_power][i] =
             (root_in_power_[cur_degree_power][i - 1] * root) % kMod;
@@ -96,7 +97,7 @@ class IntegerFFT {
     }
   }
   int ReversedBits(int value) {
-    if (rev_bits_[degree_power_][value] == -1) {
+    if (rev_bits_[degree_power_][value] == kNotFound) {
       int ans = 0;
       for (int i = 0; i < degree_power_; ++i) {
         ans += ((value >> i) % 2) << (degree_power_ - i - 1);
