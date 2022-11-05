@@ -29,7 +29,7 @@ class IntegerFFT {
     for (int i = 0; i < degree_; ++i) {
       ans[i] = (first_calculated[i] * second_calculated[i]) % kMod;
     }
-    ans = Transform(ans, rev_root_in_power[degree_power_]);
+    ans = Transform(ans, rev_root_in_power_[degree_power_]);
     for (int i = 0; i < degree_; ++i) {
       ans[i] *= reversed_degree_[degree_power_];
       ans[i] %= kMod;
@@ -45,7 +45,7 @@ class IntegerFFT {
  protected:
   const long long kModForValues;
 
-  void Prepare(int value, long long& degree, int& degree_power) {
+  static void Prepare(int value, long long& degree, int& degree_power) {
     degree_power = 0;
     degree = (value == 0 ? 0 : 1);
     while (degree < value) {
@@ -72,7 +72,7 @@ class IntegerFFT {
   int degree_power_ = 0;
   std::vector<long long> reversed_degree_;
   std::vector<std::vector<long long>> root_in_power_;
-  std::vector<std::vector<long long>> rev_root_in_power;
+  std::vector<std::vector<long long>> rev_root_in_power_;
   std::vector<std::vector<int>> rev_bits_;
 
   void CreateRootTable() {
@@ -91,9 +91,9 @@ class IntegerFFT {
       }
       degree *= 2;
     }
-    rev_root_in_power = root_in_power_;
+    rev_root_in_power_ = root_in_power_;
     for (int i = 0; i < kMaxDegreePower; ++i) {
-      std::reverse(rev_root_in_power[i].begin(), rev_root_in_power[i].end());
+      std::reverse(rev_root_in_power_[i].begin(), rev_root_in_power_[i].end());
     }
   }
   int ReversedBits(int value) {
@@ -154,9 +154,8 @@ class IntegerFFT {
 
 class RecurrentFinder : public IntegerFFT {
  public:
-  RecurrentFinder(long long mod, int size, const long long first_coef,
-                  const long long second_coef, const int first_shift,
-                  const int second_shift)
+  RecurrentFinder(long long mod, int size, long long first_coef,
+                  long long second_coef, int first_shift, int second_shift)
       : IntegerFFT(mod),
         kSize(size),
         kFirstCoef((first_coef % kModForValues + kModForValues) %
@@ -165,13 +164,13 @@ class RecurrentFinder : public IntegerFFT {
                     kModForValues),
         kFirstShift(first_shift),
         kSecondShift(second_shift){};
-  long long find(long long number) {
+  long long Find(long long number) {
     std::vector<long long> base_values(kSize, 0);
     Prepare(base_values);
     if (number < kSize) {
       return base_values[number];
     }
-    std::vector<long long> polynomial = findPolynomial(number);
+    std::vector<long long> polynomial = FindPolynomial(number);
     long long ans = 0;
     for (int i = 0; i < kSize; ++i) {
       ans += polynomial[i] * base_values[i];
@@ -204,15 +203,15 @@ class RecurrentFinder : public IntegerFFT {
       base_values[i] %= kModForValues;
     }
   }
-  std::vector<long long> findPolynomial(long long step) {
+  std::vector<long long> FindPolynomial(long long step) {
     if (step < kSize) {
       std::vector<long long> ans(kSize, 0);
       ans[step] = 1;
       return ans;
     }
-    std::vector<long long> ans = findPolynomial(step / 2);
+    std::vector<long long> ans = FindPolynomial(step / 2);
     std::vector<long long> square_ans = Multiply(ans, ans);
-    ans = findRemainder(square_ans);
+    ans = FindRemainder(square_ans);
     if (step % 2 == 0) {
       return ans;
     }
@@ -223,7 +222,7 @@ class RecurrentFinder : public IntegerFFT {
     UncoverToSum(kSize, odd_ans, ans[kSize - 1]);
     return odd_ans;
   }
-  std::vector<long long> findRemainder(std::vector<long long>& dividend) {
+  std::vector<long long> FindRemainder(std::vector<long long>& dividend) {
     for (int i = static_cast<int>(dividend.size()) - 1; i >= kSize; --i) {
       UncoverToSum(i, dividend, dividend[i]);
     }
@@ -253,6 +252,6 @@ int main() {
   std::cin >> number >> coef[0] >> coef[1] >> shift[0] >> shift[1];
   RecurrentFinder finder(kTaskMod, shift[1], coef[0], coef[1], shift[0],
                          shift[1]);
-  std::cout << finder.find(number);
+  std::cout << finder.Find(number);
   return 0;
 }
