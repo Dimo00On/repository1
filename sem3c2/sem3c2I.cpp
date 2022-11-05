@@ -121,7 +121,7 @@ class IntegerFFT {
   }
   void ButterflyTransform(std::vector<long long>& calculated, int cur_degree,
                           int size,
-                          const std::vector<long long>& root_in_power) {
+                          const std::vector<long long>& root_in_power) const {
     long long copy = calculated[cur_degree];
     long long shift = degree_ / 2 / size;
     calculated[cur_degree] += root_in_power[(cur_degree * shift) % degree_] *
