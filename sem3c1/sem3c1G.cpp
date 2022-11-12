@@ -1,88 +1,91 @@
 #include <iostream>
 #include <vector>
 
-const int kAlphabetBegin = 35; // 35 == '#'
-const int kAlphabetSize = 88; // 88 = 26 + (97 - 35); 97 == 'a'
+const int kAlphabetBegin = 35;  // 35 == '#'
+const int kAlphabetSize = 88;   // 88 = 26 + (97 - 35); 97 == 'a'
+const char kDelimiter = '#';
 
 class SuffArrayFinder {
-    int step = 0;
-    int size = 0;
-    std::string str;
-    std::vector<int> positions;
-    std::vector<int> classes;
+ public:
+  std::vector<int> GetSuffArray(const std::string& newStr) {
+    str_ = newStr + kDelimiter;
+    size_ = static_cast<int>(str_.length());
+    positions_.resize(size_);
+    classes_.resize(size_, 0);
+    PreFindPositions();
+    PreFindClasses();
+    for (step_ = 0; (1 << step_) < size_; ++step_) {
+      ReFindPositions();
+      ReFindClasses();
+    }
+    return {positions_.begin() + 1, positions_.end()};
+  }
 
-    void preFindPositions() {
-        std::vector<int> cnt(kAlphabetSize, 0);
-        for (char letter : str) {
-            ++cnt[letter - kAlphabetBegin];
-        }
-        for (int i = 1; i < kAlphabetSize; ++i) {
-            cnt[i] += cnt[i - 1];
-        }
-        for (int i = size - 1; i >= 0; --i) {
-            positions[--cnt[str[i] - kAlphabetBegin]] = i;
-        }
-    }
-    void preFindClasses() {
-        for (size_t i = 1; i < str.length(); ++i) {
-            classes[positions[i]] = classes[positions[i - 1]];
-            if (str[positions[i]] != str[positions[i - 1]]) {
-                ++classes[positions[i]];
-            }
-        }
-    }
-    void reFindPositions() {
-        std::vector<int> newPositions(size);
-        std::vector<int> cnt(size, 0);
-        for (int i = 0; i < size; ++i) {
-            newPositions[i] = (positions[i] + size - (1 << step)) % size;
-        }
-        for (int i = 0; i < size; ++i) {
-            ++cnt[classes[i]];
-        }
-        for (int i = 1; i < size; ++i) {
-            cnt[i] += cnt[i - 1];
-        }
-        for (int i = size - 1; i >= 0; --i) {
-            int clas = classes[newPositions[i]];
-            positions[--cnt[clas]] = newPositions[i];
-        }
-    }
-    void reFindClasses() {
-        std::vector<int> newClasses(size, 0);
-        for (int i = 1; i < size; ++i) {
-            newClasses[positions[i]] = newClasses[positions[i - 1]];
-            if (classes[positions[i]] != classes[positions[i - 1]] ||
-                classes[positions[i] + (1 << step)] != classes[positions[i - 1] + (1 << step)]) {
-                ++newClasses[positions[i]];
-            }
-        }
-        std::swap(classes, newClasses);
-    }
+ private:
+  int step_ = 0;
+  int size_ = 0;
+  std::string str_;
+  std::vector<int> positions_;
+  std::vector<int> classes_;
 
-public:
-    std::vector<int> getSuffArray(const std::string& newStr) {
-        str = newStr + '#';
-        size = static_cast<int>(str.length());
-        positions.resize(size);
-        classes.resize(size, 0);
-        preFindPositions();
-        preFindClasses();
-        for (step = 0; (1 << step) < size; ++step) {
-            reFindPositions();
-            reFindClasses();
-        }
-        return positions;
+  void PreFindPositions() {
+    std::vector<int> cnt(kAlphabetSize, 0);
+    for (char letter : str_) {
+      ++cnt[letter - kAlphabetBegin];
     }
+    for (int i = 1; i < kAlphabetSize; ++i) {
+      cnt[i] += cnt[i - 1];
+    }
+    for (int i = size_ - 1; i >= 0; --i) {
+      positions_[--cnt[str_[i] - kAlphabetBegin]] = i;
+    }
+  }
+  void PreFindClasses() {
+    for (size_t i = 1; i < str_.length(); ++i) {
+      classes_[positions_[i]] = classes_[positions_[i - 1]];
+      if (str_[positions_[i]] != str_[positions_[i - 1]]) {
+        ++classes_[positions_[i]];
+      }
+    }
+  }
+  void ReFindPositions() {
+    std::vector<int> new_positions(size_);
+    std::vector<int> cnt(size_, 0);
+    for (int i = 0; i < size_; ++i) {
+      new_positions[i] = (positions_[i] + size_ - (1 << step_)) % size_;
+    }
+    for (int i = 0; i < size_; ++i) {
+      ++cnt[classes_[i]];
+    }
+    for (int i = 1; i < size_; ++i) {
+      cnt[i] += cnt[i - 1];
+    }
+    for (int i = size_ - 1; i >= 0; --i) {
+      int clas = classes_[new_positions[i]];
+      positions_[--cnt[clas]] = new_positions[i];
+    }
+  }
+  void ReFindClasses() {
+    std::vector<int> new_classes(size_, 0);
+    for (int i = 1; i < size_; ++i) {
+      new_classes[positions_[i]] = new_classes[positions_[i - 1]];
+      if (classes_[positions_[i]] != classes_[positions_[i - 1]] ||
+          classes_[positions_[i] + (1 << step_)] !=
+              classes_[positions_[i - 1] + (1 << step_)]) {
+        ++new_classes[positions_[i]];
+      }
+    }
+    std::swap(classes_, new_classes);
+  }
 };
 
 int main() {
-    std::string str;
-    std::cin >> str;
-    SuffArrayFinder finder;
-    auto answer = finder.getSuffArray(str);
-    for (size_t i = 1; i < answer.size(); ++i) {
-        std::cout << answer[i] + 1 << " ";
-    }
-    return 0;
+  std::string str;
+  std::cin >> str;
+  SuffArrayFinder finder;
+  auto answer = finder.GetSuffArray(str);
+  for (auto& ans : answer) {
+    std::cout << ans + 1 << " ";
+  }
+  return 0;
 }
