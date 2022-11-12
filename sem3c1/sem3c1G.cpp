@@ -84,7 +84,7 @@ int main() {
   std::cin >> str;
   SuffArrayFinder finder;
   auto answer = finder.GetSuffArray(str);
-  for (auto& ans : answer) {
+  for (const auto& ans : answer) {
     std::cout << ans + 1 << " ";
   }
   return 0;
