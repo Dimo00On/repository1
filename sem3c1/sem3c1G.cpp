@@ -7,8 +7,8 @@ const char kDelimiter = '#';
 
 class SuffArrayFinder {
  public:
-  std::vector<int> GetSuffArray(const std::string& newStr) {
-    str_ = newStr + kDelimiter;
+  std::vector<int> GetSuffArray(const std::string& new_str) {
+    str_ = new_str + kDelimiter;
     size_ = static_cast<int>(str_.length());
     positions_.resize(size_);
     classes_.resize(size_, 0);
