@@ -42,25 +42,20 @@ class Graph {
   std::vector<Node> vertices_;
 };
 
-class AhoKorasikSolver {
+class AhoCorasickAutomaton {
  public:
-  AhoKorasikSolver(std::string& text, std::vector<std::string>& dict,
-                   std::vector<std::vector<int>>& ans)
-      : text_(text), dict_(dict), ans_(ans) {}
-  void AhoKorasik() {
-    for (int i = 0; i < static_cast<int>(dict_.size()); ++i) {
-      trie_.Add(dict_[i], i);
-    }
-    MakeLinks();
-    MakeCompressedLinks();
+  explicit AhoCorasickAutomaton(std::vector<std::string>& dict) : dict_(dict) {
+    AhoCorasick();
+  }
+  void FindOccurrences(const std::string& kText,
+                       std::vector<std::vector<int>>& ans) {
     int pos = 0;
-    for (int i = 0; i < static_cast<int>(text_.length()); ++i) {
-      pos = go_[pos][text_[i] - kAlphabetStart];
+    for (int i = 0; i < static_cast<int>(kText.length()); ++i) {
+      pos = go_[pos][kText[i] - kAlphabetStart];
       int temp = pos;
       while (temp != kNoVertex) {
         for (auto index : trie_[temp].word_number) {
-          ans_[index].push_back(i - static_cast<int>(dict_[index].length()) +
-                                1);
+          ans[index].push_back(i - static_cast<int>(dict_[index].length()) + 1);
         }
         temp = compressed_link_[temp];
       }
@@ -68,14 +63,19 @@ class AhoKorasikSolver {
   }
 
  private:
-  std::string& text_;
   std::vector<std::string>& dict_;
-  std::vector<std::vector<int>>& ans_;
   Graph trie_;
   std::vector<int> link_;
   std::vector<std::vector<int>> go_;
   std::vector<int> compressed_link_;
 
+  void AhoCorasick() {
+    for (int i = 0; i < static_cast<int>(dict_.size()); ++i) {
+      trie_.Add(dict_[i], i);
+    }
+    MakeLinks();
+    MakeCompressedLinks();
+  }
   void MakeLinks() {
     link_.resize(trie_.Size(), kRoot);
     go_.resize(trie_.Size(), std::vector<int>(kAlphabetSize, kNoVertex));
@@ -121,6 +121,17 @@ class AhoKorasikSolver {
   }
 };
 
+void PrintAnswer(std::vector<std::vector<int>>& ans, int dict_size) {
+  for (int i = 0; i < dict_size; ++i) {
+    std::cout << ans[i].size() << " ";
+    std::sort(ans[i].begin(), ans[i].end());
+    for (int j : ans[i]) {
+      std::cout << j + 1 << " ";
+    }
+    std::cout << '\n';
+  }
+}
+
 int main() {
   std::string text;
   std::cin >> text;
@@ -131,15 +142,8 @@ int main() {
     std::cin >> dict[i];
   }
   std::vector<std::vector<int>> ans(dict_size);
-  AhoKorasikSolver solver(text, dict, ans);
-  solver.AhoKorasik();
-  for (int i = 0; i < dict_size; ++i) {
-    std::cout << ans[i].size() << " ";
-    std::sort(ans[i].begin(), ans[i].end());
-    for (int j : ans[i]) {
-      std::cout << j + 1 << " ";
-    }
-    std::cout << '\n';
-  }
+  AhoCorasickAutomaton automaton(dict);
+  automaton.FindOccurrences(text, ans);
+  PrintAnswer(ans, dict_size);
   return 0;
 }
