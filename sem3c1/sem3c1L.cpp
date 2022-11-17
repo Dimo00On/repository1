@@ -126,37 +126,43 @@ class SuffTree {
     last_path_.push(kRoot);
     ++size_;
   }
+  void AddSuffSimpleCase(int start) {
+    vertices_.emplace_back(size_, vertices_[kRoot], start, str_.length());
+    last_path_.push(size_);
+    vertices_[kRoot].to[str_[start]] = size_;
+    ++size_;
+  }
+  void AddSuffNotSimpleCase(int start, int lcp) {
+    int last_erased = kNoErased;
+    while (vertices_[last_path_.top()].depth > lcp) {
+      last_erased = last_path_.top();
+      last_path_.pop();
+    }
+    if (vertices_[last_path_.top()].depth != lcp) {
+      int start_index = vertices_[last_erased].edge.left_index;
+      int middle_index =
+          start_index + lcp - vertices_[vertices_[last_erased].prev].depth;
+      vertices_.emplace_back(size_, vertices_[last_path_.top()], start_index,
+                             middle_index);
+      vertices_[last_path_.top()].to[str_[start_index]] = size_;
+      last_path_.push(size_);
+      ++size_;
+      vertices_[last_erased].edge.left_index = middle_index;
+      vertices_[last_erased].edge.Fix();
+      vertices_[last_erased].prev = last_path_.top();
+      vertices_[last_path_.top()].to[str_[middle_index]] = last_erased;
+    }
+    vertices_.emplace_back(size_, vertices_[last_path_.top()], start + lcp,
+                           str_.length());
+    vertices_[last_path_.top()].to[str_[start + lcp]] = size_;
+    last_path_.push(size_);
+    ++size_;
+  }
   void AddSuff(int start, int lcp) {
     if (last_path_.top() == kRoot) {
-      vertices_.emplace_back(size_, vertices_[kRoot], start, str_.length());
-      last_path_.push(size_);
-      vertices_[kRoot].to[str_[start]] = size_;
-      ++size_;
+      AddSuffSimpleCase(start);
     } else {
-      int last_erased = kNoErased;
-      while (vertices_[last_path_.top()].depth > lcp) {
-        last_erased = last_path_.top();
-        last_path_.pop();
-      }
-      if (vertices_[last_path_.top()].depth != lcp) {
-        int start_index = vertices_[last_erased].edge.left_index;
-        int middle_index =
-            start_index + lcp - vertices_[vertices_[last_erased].prev].depth;
-        vertices_.emplace_back(size_, vertices_[last_path_.top()], start_index,
-                               middle_index);
-        vertices_[last_path_.top()].to[str_[start_index]] = size_;
-        last_path_.push(size_);
-        ++size_;
-        vertices_[last_erased].edge.left_index = middle_index;
-        vertices_[last_erased].edge.Fix();
-        vertices_[last_erased].prev = last_path_.top();
-        vertices_[last_path_.top()].to[str_[middle_index]] = last_erased;
-      }
-      vertices_.emplace_back(size_, vertices_[last_path_.top()], start + lcp,
-                             str_.length());
-      vertices_[last_path_.top()].to[str_[start + lcp]] = size_;
-      last_path_.push(size_);
-      ++size_;
+      AddSuffNotSimpleCase(start, lcp);
     }
   }
   void BuildSuffTree(std::vector<int>& lcp, std::vector<int>& suffix_array) {
