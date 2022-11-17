@@ -10,7 +10,9 @@ class SuffArrayFinder {
   std::vector<int> GetSuffArray(const std::string& new_str) {
     str_ = new_str + kDelimiter;
     size_ = static_cast<int>(str_.length());
+    // positions_.clear(); достаточно resize
     positions_.resize(size_);
+    classes_.clear();
     classes_.resize(size_, 0);
     PreFindPositions();
     PreFindClasses();
@@ -30,7 +32,7 @@ class SuffArrayFinder {
 
   void PreFindPositions() {
     std::vector<int> cnt(kAlphabetSize, 0);
-    for (char letter : str_) {
+    for (const char& letter : str_) {
       ++cnt[letter - kAlphabetBegin];
     }
     for (int i = 1; i < kAlphabetSize; ++i) {
@@ -61,8 +63,8 @@ class SuffArrayFinder {
       cnt[i] += cnt[i - 1];
     }
     for (int i = size_ - 1; i >= 0; --i) {
-      int clas = classes_[new_positions[i]];
-      positions_[--cnt[clas]] = new_positions[i];
+      int current_class = classes_[new_positions[i]];
+      positions_[--cnt[current_class]] = new_positions[i];
     }
   }
   void ReFindClasses() {
