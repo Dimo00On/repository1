@@ -12,7 +12,9 @@ class SuffArrayFinder {
   std::vector<int> GetSuffArray(const std::string& new_str) {
     str_ = new_str;
     size_ = static_cast<int>(str_.length());
+    // positions_.clear(); достаточно resize
     positions_.resize(size_);
+    classes_.clear();
     classes_.resize(size_, 0);
     PreFindPositions();
     PreFindClasses();
@@ -32,7 +34,7 @@ class SuffArrayFinder {
 
   void PreFindPositions() {
     std::vector<int> cnt(kAlphabetSize, 0);
-    for (char letter : str_) {
+    for (const char& letter : str_) {
       ++cnt[letter - kAlphabetBegin];
     }
     for (int i = 1; i < kAlphabetSize; ++i) {
@@ -63,8 +65,8 @@ class SuffArrayFinder {
       cnt[i] += cnt[i - 1];
     }
     for (int i = size_ - 1; i >= 0; --i) {
-      int clas = classes_[new_positions[i]];
-      positions_[--cnt[clas]] = new_positions[i];
+      int current_class = classes_[new_positions[i]];
+      positions_[--cnt[current_class]] = new_positions[i];
     }
   }
   void ReFindClasses() {
@@ -95,7 +97,7 @@ struct Edge {
       : left_index(left_index),
         right_index(right_index),
         length(right_index - left_index){};
-  void fix() { length = right_index - left_index; }
+  void Fix() { length = right_index - left_index; }
 };
 
 const int kNoNumber = -1;
@@ -131,24 +133,24 @@ class SuffTree {
       vertices_[kRoot].to[str_[start]] = size_;
       ++size_;
     } else {
-      int lastErased = kNoErased;
+      int last_erased = kNoErased;
       while (vertices_[last_path_.top()].depth > lcp) {
-        lastErased = last_path_.top();
+        last_erased = last_path_.top();
         last_path_.pop();
       }
       if (vertices_[last_path_.top()].depth != lcp) {
-        int startIndex = vertices_[lastErased].edge.left_index;
-        int middleIndex =
-            startIndex + lcp - vertices_[vertices_[lastErased].prev].depth;
-        vertices_.emplace_back(size_, vertices_[last_path_.top()], startIndex,
-                               middleIndex);
-        vertices_[last_path_.top()].to[str_[startIndex]] = size_;
+        int start_index = vertices_[last_erased].edge.left_index;
+        int middle_index =
+            start_index + lcp - vertices_[vertices_[last_erased].prev].depth;
+        vertices_.emplace_back(size_, vertices_[last_path_.top()], start_index,
+                               middle_index);
+        vertices_[last_path_.top()].to[str_[start_index]] = size_;
         last_path_.push(size_);
         ++size_;
-        vertices_[lastErased].edge.left_index = middleIndex;
-        vertices_[lastErased].edge.fix();
-        vertices_[lastErased].prev = last_path_.top();
-        vertices_[last_path_.top()].to[str_[middleIndex]] = lastErased;
+        vertices_[last_erased].edge.left_index = middle_index;
+        vertices_[last_erased].edge.Fix();
+        vertices_[last_erased].prev = last_path_.top();
+        vertices_[last_path_.top()].to[str_[middle_index]] = last_erased;
       }
       vertices_.emplace_back(size_, vertices_[last_path_.top()], start + lcp,
                              str_.length());
@@ -157,13 +159,13 @@ class SuffTree {
       ++size_;
     }
   }
-  void BuildSuffTree(std::vector<int>& lcp, std::vector<int>& suff_ar) {
-    AddSuff(suff_ar[0], 0);
+  void BuildSuffTree(std::vector<int>& lcp, std::vector<int>& suffix_array) {
+    AddSuff(suffix_array[0], 0);
     for (int i = 1; i < static_cast<int>(str_.length()); ++i) {
-      AddSuff(suff_ar[i], lcp[i - 1]);
+      AddSuff(suffix_array[i], lcp[i - 1]);
     }
   }
-  void DfsCout(int vertex, int prev, int& counter) {
+  void PrintTree(int vertex, int prev, int& counter) {
     vertices_[vertex].new_number = counter;
     ++counter;
     if (prev != kNoPrev) {
@@ -174,11 +176,11 @@ class SuffTree {
     for (int i = kAlphabetBegin; i < kAlphabetBegin + kAlphabetSize; ++i) {
       auto it = vertices_[vertex].to.find(static_cast<char>(i));
       if (it != vertices_[vertex].to.end()) {
-        DfsCout(it->second, vertex, counter);
+        PrintTree(it->second, vertex, counter);
       }
     }
   }
-  int Size() const { return size_; }
+  int GetSize() const { return size_; }
 
  private:
   const std::string& str_;
@@ -187,25 +189,27 @@ class SuffTree {
   int size_ = 0;
 };
 
-void FindLCP(std::vector<int>& lcp, std::vector<int>& suff_ar,
+void FindLCP(std::vector<int>& lcp, std::vector<int>& suffix_array,
              const std::string& str) {
   int length = static_cast<int>(str.length());
   std::vector<int> back(length);
   for (int i = 0; i < length; ++i) {
-    back[suff_ar[i]] = i;
+    back[suffix_array[i]] = i;
   }
   int cur_lcp = 0;
-  for (int i = 0; i < length; ++i) {
+  for (int meaningful_index = 0; meaningful_index < length;
+       ++meaningful_index) {
     cur_lcp = std::max(cur_lcp - 1, 0);
-    if (back[i] == length - 1) {
+    if (back[meaningful_index] == length - 1) {
       continue;
     }
-    int j = suff_ar[back[i] + 1];
-    while (i + cur_lcp < length && j + cur_lcp < length &&
-           str[i + cur_lcp] == str[j + cur_lcp]) {
+    int meaningful_jndex = suffix_array[back[meaningful_index] + 1];
+    while (meaningful_index + cur_lcp < length &&
+           meaningful_jndex + cur_lcp < length &&
+           str[meaningful_index + cur_lcp] == str[meaningful_jndex + cur_lcp]) {
       ++cur_lcp;
     }
-    lcp[back[i]] = cur_lcp;
+    lcp[back[meaningful_index]] = cur_lcp;
   }
 }
 
@@ -213,13 +217,13 @@ int main() {
   std::string str;
   std::cin >> str;
   SuffArrayFinder finder;
-  auto suffAr = finder.GetSuffArray(str);
+  auto suffix_array = finder.GetSuffArray(str);
   std::vector<int> lcp(str.length() - 1);
-  FindLCP(lcp, suffAr, str);
+  FindLCP(lcp, suffix_array, str);
   SuffTree suff_tree(str);
-  suff_tree.BuildSuffTree(lcp, suffAr);
-  std::cout << suff_tree.Size() << std::endl;
+  suff_tree.BuildSuffTree(lcp, suffix_array);
+  std::cout << suff_tree.GetSize() << std::endl;
   int counter = 0;
-  suff_tree.DfsCout(kRoot, kNoPrev, counter);
+  suff_tree.PrintTree(kRoot, kNoPrev, counter);
   return 0;
 }
