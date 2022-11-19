@@ -47,11 +47,11 @@ class AhoCorasickAutomaton {
   explicit AhoCorasickAutomaton(std::vector<std::string>& dict) : dict_(dict) {
     AhoCorasick();
   }
-  void FindOccurrences(const std::string& kText,
+  void FindOccurrences(const std::string& text,
                        std::vector<std::vector<int>>& ans) {
     int pos = 0;
-    for (int i = 0; i < static_cast<int>(kText.length()); ++i) {
-      pos = go_[pos][kText[i] - kAlphabetStart];
+    for (int i = 0; i < static_cast<int>(text.length()); ++i) {
+      pos = go_[pos][text[i] - kAlphabetStart];
       int temp = pos;
       while (temp != kNoVertex) {
         for (auto index : trie_[temp].word_number) {
