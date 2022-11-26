@@ -74,8 +74,8 @@ class Point {
   bool operator>=(const Point& other) const { return !(*this < other); }
   bool operator!=(const Point& other) const { return !(*this == other); }
   Point& operator+=(const Point& other) {
-    x_ += other.x;
-    y_ += other.y;
+    x_ += other.x_;
+    y_ += other.y_;
     length_ = kNoCalculated;
     return *this;
   }
