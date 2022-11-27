@@ -15,7 +15,7 @@ bool IsEqual(const T& first, const Q& second) {
   return (first - kEps < second && first + kEps > second);
 }
 template <typename T, typename Q>
-bool IsMore(const T& first, const Q& second) {
+bool IsGreater(const T& first, const Q& second) {
   return first - kEps > second;
 }
 
@@ -32,15 +32,15 @@ const double kInfinity = 1e9 + 47;
 
 template <typename T>
 class Point {
- public:
-  Point() : x_(0), y_(0){};
-  Point(const T& x, const T& y) : x_(x), y_(y){};
-  Point(const Point& other) : x_(other.x_), y_(other.y_){};
-  Point(Point&& other) noexcept : x_(other.x_), y_(other.y_){};
-  Point(std::initializer_list<T> list)
-      : x_(*list.begin()), y_(*(list.begin() + 1)){};
-  Point(const Point& start, const Point& end)
-      : x_(end.x_ - start.x_), y_(end.y_ - start.y_){};
+public:
+  Point() : x_(0), y_(0) {};
+  Point(const T& x, const T& y) : x_(x), y_(y) {};
+  Point(const Point& other) : x_(other.x_), y_(other.y_) {};
+  Point(Point&& other) noexcept : x_(other.x_), y_(other.y_) {};
+  Point(std::initializer_list<T> list) :
+      x_(*list.begin()), y_(*(list.begin() + 1)) {};
+  Point(const Point& start, const Point& end) :
+      x_(end.x_ - start.x_), y_(end.y_ - start.y_) {};
   explicit operator Point<double>() { return Point<double>(x_, y_); }
   Point& operator=(const Point& other) {
     x_ = other.x_;
@@ -66,7 +66,7 @@ class Point {
   }
   bool operator<=(const Point& other) const {
     return IsLess(x_, other.x_) ||
-           (IsEqual(x_, other.x_) && !IsMore(y_, other.y_));
+           (IsEqual(x_, other.x_) && !IsGreater(y_, other.y_));
   }
   bool operator>(const Point& other) const { return (other < *this); }
   bool operator>=(const Point& other) const { return !(*this < other); }
@@ -151,7 +151,7 @@ class Point {
     length_ = 1;
   }
 
- private:
+private:
   T x_;
   T y_;
   mutable double length_ = kNoCalculated;
@@ -196,15 +196,15 @@ Point<double> GetPointOnLine(double a, double b,
 
 enum class VectorType { Direction, Normal };
 class Line {
- public:
+public:
   // (normal_, direction_) - положительная
   // normal_ в сторону, где > 0
-  Line(const double& a, const double& b, const double& c)
-      : direction_(-b, a), normal_(a, b), point_(GetPointOnLine(a, b, c)){};
-  Line(std::initializer_list<double> list)
-      : Line(*(list.begin()), *(list.begin() + 1), *(list.begin() + 2)){};
-  Line(VectorType type, const Point<double>& vector, const Point<double>& point)
-      : point_(point) {
+  Line(const double& a, const double& b, const double& c) :
+      direction_(-b, a), normal_(a, b), point_(GetPointOnLine(a, b, c)) {};
+  Line(std::initializer_list<double> list) :
+      Line(*(list.begin()), *(list.begin() + 1), *(list.begin() + 2)) {};
+  Line(VectorType type, const Point<double>& vector, const Point<double>& point) :
+      point_(point) {
     if (type == VectorType::Direction) {
       direction_ = vector;
       normal_ = direction_.GetRightNormal();
@@ -214,8 +214,8 @@ class Line {
       direction_ = normal_.GetLeftNormal();
     }
   }
-  Line(const Point<double>& first_point, const Point<double>& second_point)
-      : Line(VectorType::Direction, second_point - first_point, first_point){};
+  Line(const Point<double>& first_point, const Point<double>& second_point) :
+      Line(VectorType::Direction, second_point - first_point, first_point) {};
   void Normalize() {
     direction_.Normalize();
     normal_.Normalize();
@@ -240,7 +240,7 @@ class Line {
   const Point<double>& GetNormal() const { return normal_; }
   const Point<double>& GetPoint() const { return point_; }
 
- private:
+private:
   Point<double> direction_;
   Point<double> normal_;
   Point<double> point_;
@@ -262,25 +262,26 @@ double Distance(const Point<T>& first, const Point<T>& second) {
 }
 
 class SegmentsCrossChecker {
- public:
+public:
   bool answer = false;
   Point<double> cross_point = kInfinityPoint;
 
-  SegmentsCrossChecker(const Point<double>& first_begin,
-                       const Point<double>& first_end,
-                       const Point<double>& second_begin,
-                       const Point<double>& second_end)
-      : first_begin_(first_begin),
-        first_end_(first_end),
-        second_begin_(second_begin),
-        second_end_(second_end),
-        first_vector_(first_begin, first_end),
-        second_vector_(second_begin, second_end),
-        temp_vector_(first_begin, second_begin) {
+  SegmentsCrossChecker(
+      const Point<double>& first_begin,
+      const Point<double>& first_end,
+      const Point<double>& second_begin,
+      const Point<double>& second_end) :
+      first_begin_(first_begin),
+      first_end_(first_end),
+      second_begin_(second_begin),
+      second_end_(second_end),
+      first_vector_(first_begin, first_end),
+      second_vector_(second_begin, second_end),
+      temp_vector_(first_begin, second_begin) {
     Check();
   };
 
- private:
+private:
   const Point<double>& first_begin_;
   const Point<double>& first_end_;
   const Point<double>& second_begin_;
@@ -318,7 +319,7 @@ class SegmentsCrossChecker {
     Point<double> vector(begin, end);
     if (temp_vector_.IsCollinearTo(vector)) {
       double coef = temp_vector_ / vector;
-      if (!IsMore(coef, 1) && !IsLess(coef, 0)) {
+      if (!IsGreater(coef, 1) && !IsLess(coef, 0)) {
         answer = true;
         cross_point = point;
       }
@@ -327,13 +328,13 @@ class SegmentsCrossChecker {
   void SegmentsCrossParallel() {
     answer = true;
     double first_coef = temp_vector_ / first_vector_;
-    if (!IsLess(first_coef, 0) && !IsMore(first_coef, 1)) {
+    if (!IsLess(first_coef, 0) && !IsGreater(first_coef, 1)) {
       cross_point = second_begin_;
       return;
     }
     temp_vector_ = Point<double>(first_begin_, second_end_);
     double second_coef = temp_vector_ / first_vector_;
-    if (IsMore(first_coef, 1) && !IsMore(second_coef, 1)) {
+    if (IsGreater(first_coef, 1) && !IsGreater(second_coef, 1)) {
       cross_point = first_end_;
       return;
     }
@@ -351,8 +352,8 @@ class SegmentsCrossChecker {
     Point<double> second_cross_vector(second_begin_, cross_point);
     double first_coef = first_cross_vector / first_vector_;
     double second_coef = second_cross_vector / second_vector_;
-    if (!IsLess(first_coef, 0) && !IsMore(first_coef, 1) &&
-        !IsLess(second_coef, 0) && !IsMore(second_coef, 1)) {
+    if (!IsLess(first_coef, 0) && !IsGreater(first_coef, 1) &&
+        !IsLess(second_coef, 0) && !IsGreater(second_coef, 1)) {
       answer = true;
     }
   }
@@ -362,15 +363,15 @@ template <typename T>
 void CreatePolygonByPoints(
     const std::vector<Point<T>>& points,
     std::vector<std::pair<Point<T>, Point<T>>>& polygon) {
-  size_t last = static_cast<int>(points.size()) - 1;
+  int last = static_cast<int>(points.size()) - 1;
   for (int i = 0; i < last; ++i) {
-    if (!IsMore(points[i].GetY(), points[i + 1].GetY())) {
+    if (!IsGreater(points[i].GetY(), points[i + 1].GetY())) {
       polygon.emplace_back(points[i], points[i + 1]);
     } else {
       polygon.emplace_back(points[i + 1], points[i]);
     }
   }
-  if (!IsMore(points[last].GetY(), points[0].GetY())) {
+  if (!IsGreater(points[last].GetY(), points[0].GetY())) {
     polygon.emplace_back(points[last], points[0]);
   } else {
     polygon.emplace_back(points[0], points[last]);
@@ -380,9 +381,11 @@ void CreatePolygonByPoints(
 template <typename T>
 class LocationChecker {
  public:
-  LocationChecker(const Point<T>& point,
-                  const std::vector<std::pair<Point<T>, Point<T>>>& polygon)
-      : polygon_(polygon), point_(point) {
+  LocationChecker(
+      const Point<T>& point,
+      const std::vector<std::pair<Point<T>, Point<T>>>& polygon) :
+      polygon_(polygon),
+      point_(point) {
     CheckLocation();
   }
   void CheckLocation() {
@@ -409,7 +412,7 @@ class LocationChecker {
       Point<T> to_point_vector(polygon_[i].first, point_);
       if (to_point_vector.IsCollinearTo(edge_vector)) {
         double coef = to_point_vector / edge_vector;
-        if (!IsLess(coef, 0) && !IsMore(coef, 1)) {
+        if (!IsLess(coef, 0) && !IsGreater(coef, 1)) {
           return true;
         }
       }
@@ -419,25 +422,23 @@ class LocationChecker {
   bool CheckIsInside() {
     int cross_cnt = 0;
     for (int i = 0; i < static_cast<int>(polygon_.size()); ++i) {
-      if (IsMore(polygon_[i].first.GetY(), point_.GetY()) ||
-          !IsMore(polygon_[i].second.GetY(), point_.GetY())) {
+      if (IsGreater(polygon_[i].first.GetY(), point_.GetY()) ||
+          !IsGreater(polygon_[i].second.GetY(), point_.GetY())) {
         continue;
       }
       Point<T> to_point_vector(polygon_[i].first, point_);
       Point<T> edge_vector(polygon_[i].first, polygon_[i].second);
-      if (!IsMore(VectorMultiply(to_point_vector, edge_vector), 0)) {
+      if (!IsGreater(VectorMultiply(to_point_vector, edge_vector), 0)) {
         ++cross_cnt;
       }
     }
-    if (cross_cnt % 2 == 1) {
-      return true;
-    }
-    return false;
+    return cross_cnt % 2 == 1;
   }
 };
 
 int main() {
-  int vertex_amount, point_amount;
+  int vertex_amount;
+  int point_amount;
   std::cin >> vertex_amount >> point_amount;
   std::vector<Point<long long>> polygon_points;
   for (int i = 0; i < vertex_amount; ++i) {
@@ -449,7 +450,7 @@ int main() {
     }
   }
   std::vector<std::pair<Point<long long>, Point<long long>>> polygon;
-  CreatePolygonByPoints(polygon_points, polygon);
+  CreatePolygonByPoints<long long>(polygon_points, polygon);
   Point<long long> point_to_check;
   for (int i = 0; i < point_amount; ++i) {
     std::cin >> point_to_check;
