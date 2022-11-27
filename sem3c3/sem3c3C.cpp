@@ -33,14 +33,14 @@ const double kInfinity = 1e9 + 47;
 template <typename T>
 class Point {
  public:
-  Point() : x_(0), y_(0) {};
-  Point(const T& x, const T& y) : x_(x), y_(y) {};
-  Point(const Point& other) : x_(other.x_), y_(other.y_) {};
-  Point(Point&& other) noexcept : x_(other.x_), y_(other.y_) {};
-  Point(std::initializer_list<T> list) :
-      x_(*list.begin()), y_(*(list.begin() + 1)) {};
-  Point(const Point& start, const Point& end) :
-      x_(end.x_ - start.x_), y_(end.y_ - start.y_) {};
+  Point() : x_(0), y_(0){};
+  Point(const T& x, const T& y) : x_(x), y_(y){};
+  Point(const Point& other) : x_(other.x_), y_(other.y_){};
+  Point(Point&& other) noexcept : x_(other.x_), y_(other.y_){};
+  Point(std::initializer_list<T> list)
+      : x_(*list.begin()), y_(*(list.begin() + 1)){};
+  Point(const Point& start, const Point& end)
+      : x_(end.x_ - start.x_), y_(end.y_ - start.y_){};
   explicit operator Point<double>() { return Point<double>(x_, y_); }
   Point& operator=(const Point& other) {
     x_ = other.x_;
@@ -199,12 +199,12 @@ class Line {
  public:
   // (normal_, direction_) - положительная
   // normal_ в сторону, где > 0
-  Line(const double& a, const double& b, const double& c) :
-      direction_(-b, a), normal_(a, b), point_(GetPointOnLine(a, b, c)) {};
-  Line(std::initializer_list<double> list) :
-      Line(*(list.begin()), *(list.begin() + 1), *(list.begin() + 2)) {};
-  Line(VectorType type, const Point<double>& vector, const Point<double>& point) :
-      point_(point) {
+  Line(const double& a, const double& b, const double& c)
+      : direction_(-b, a), normal_(a, b), point_(GetPointOnLine(a, b, c)){};
+  Line(std::initializer_list<double> list)
+      : Line(*(list.begin()), *(list.begin() + 1), *(list.begin() + 2)){};
+  Line(VectorType type, const Point<double>& vector, const Point<double>& point)
+      : point_(point) {
     if (type == VectorType::Direction) {
       direction_ = vector;
       normal_ = direction_.GetRightNormal();
@@ -214,8 +214,8 @@ class Line {
       direction_ = normal_.GetLeftNormal();
     }
   }
-  Line(const Point<double>& first_point, const Point<double>& second_point) :
-      Line(VectorType::Direction, second_point - first_point, first_point) {};
+  Line(const Point<double>& first_point, const Point<double>& second_point)
+      : Line(VectorType::Direction, second_point - first_point, first_point){};
   void Normalize() {
     direction_.Normalize();
     normal_.Normalize();
@@ -266,18 +266,17 @@ class SegmentsCrossChecker {
   bool answer = false;
   Point<double> cross_point = kInfinityPoint;
 
-  SegmentsCrossChecker(
-      const Point<double>& first_begin,
-      const Point<double>& first_end,
-      const Point<double>& second_begin,
-      const Point<double>& second_end) :
-      first_begin_(first_begin),
-      first_end_(first_end),
-      second_begin_(second_begin),
-      second_end_(second_end),
-      first_vector_(first_begin, first_end),
-      second_vector_(second_begin, second_end),
-      temp_vector_(first_begin, second_begin) {
+  SegmentsCrossChecker(const Point<double>& first_begin,
+                       const Point<double>& first_end,
+                       const Point<double>& second_begin,
+                       const Point<double>& second_end)
+      : first_begin_(first_begin),
+        first_end_(first_end),
+        second_begin_(second_begin),
+        second_end_(second_end),
+        first_vector_(first_begin, first_end),
+        second_vector_(second_begin, second_end),
+        temp_vector_(first_begin, second_begin) {
     Check();
   };
 
