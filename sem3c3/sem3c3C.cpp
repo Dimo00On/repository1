@@ -306,7 +306,8 @@ class SegmentsCrossChecker {
       IsPointOnSegment(second_begin_, first_begin_, first_end_);
       return;
     }
-    if (temp_vector_.IsCollinearTo(first_vector_)) {
+    if (temp_vector_.IsCollinearTo(first_vector_) &&
+        Point<double>(first_begin_, second_end_).IsCollinearTo(first_vector_)) {
       SegmentsCrossParallel();
       return;
     }
